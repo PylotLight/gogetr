@@ -1,0 +1,247 @@
+body {
+  background: linear-gradient(125deg, #47f9e6 0%, #030a81 100%);
+  /* Created with https://www.css-gradient.com */
+/* background: #215893;
+background: -webkit-radial-gradient(top, #215893, #256E33);
+background: -moz-radial-gradient(top, #215893, #256E33);
+background: radial-gradient(to bottom, #215893, #256E33);*/
+  height: 100vh; 
+  overflow: hidden;
+  
+}
+.container {
+  height: 100%;
+  border: 1px solid transparent;
+  width: 90%;
+  max-width: 1000px;
+  margin: 0 auto;
+  position: relative;
+}
+
+.toggle__menu-open {
+  position: absolute;
+  right: 0;
+  top: 5%;
+  display: flex;
+  justify-content: flex-end;
+  transition: all 0.3s ease-in-out;
+  cursor: pointer;
+}
+.toggle__menu-close {
+  position: absolute;
+  right: 0;
+  bottom: 100px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.3s ease-in-out;
+}
+
+.title {
+  font-size: 4rem;
+  text-align: center;
+  color: aliceblue;
+  margin-top: 3%;
+}
+
+.button-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-gap: 20px;
+  justify-content: center;
+  align-items: center;
+  justify-items: center;
+  /* height: 100%; */
+}
+
+.button-grid button {
+  width: 90%;
+  height: 90%;
+  font-size: 24px;
+  /* background: rgba(255, 255, 255, 0.8); */
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-width: 1px 0px 0px 1px;
+  padding: 20px;
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease-in-out;
+
+  /* Font Styling */
+  font-size: 24px;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #ffffff;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.button-grid button:hover {
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.3);
+  color: #2e83a9;
+}
+
+.mainview {
+  position: absolute;
+  opacity: 1;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(5px);
+  /* Note: backdrop-filter has minimal browser support */
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 100%;
+  height: 70%;
+  padding: 12px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.3s ease-in-out;
+  overflow: auto;
+  /* box-shadow: 7px 7px 21px 1px rgba(0,0,0,0.48); */
+}
+
+.mainview:hover{
+  box-shadow: 7px 7px 21px 1px rgba(0,0,0,0.48);
+}
+
+.view {
+  margin: 0 1rem;
+  display: none;
+  /* place-items: center; */
+  transition: all 0.2s ease-in-out;
+  width: -webkit-fill-available;
+  height: -webkit-fill-available;
+ 
+}
+
+.viewactive{
+  opacity: 1;
+  display: grid;
+}
+
+
+.menu {
+  position: absolute;
+  bottom: 3%;
+  /* bottom: -10%; */
+  /* opacity: 1; */
+  /* top: 100%; */
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(5px);
+  /* Note: backdrop-filter has minimal browser support */
+  border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  width: 80%;
+  padding: 12px 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all .3s ease-out;
+  transition-delay: all 5s ease-out;
+}
+
+.menu:hover{
+  /* opacity: 1; */
+  /* bottom: 10% !important;  */
+  transition: all .3s cubic-bezier(0, 0, 0.36, 1.22);
+  transition-delay: all 5s ease-out;
+  box-shadow: 7px 7px 21px 1px rgba(0,0,0,0.48);
+}
+
+.menu-icon {
+  margin: 0 1rem;
+  height: 4rem;
+  width: 4rem;
+  display: grid;
+  place-items: center;
+  transition: all 0.2s ease-in-out;
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  top: -45px;
+  background: aliceblue;
+  padding: 0.3rem 1.5rem;
+  border-radius: 3px;
+  font-weight: 600;
+  font-family: sans-serif;
+  color: rgb(56, 56, 56);
+  opacity: 0;
+}
+/* Toast Notifications */
+.notification {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background-color: #333;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 5px;
+  opacity: 0.9;
+  z-index: 9999;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.notification:hover {
+  opacity: 1;
+}
+
+.progress-bar {
+  height: 1px;
+}
+
+svg, img {
+  cursor: pointer;
+  fill: white;
+  /* padding: 1rem; */
+  /* transition: all 0.2s ease-in-out; */
+}
+
+.menu-icon:hover path {
+  fill: #651fff !important;
+}
+
+.menu-icon:hover svg {
+  transform: scale(1.2);
+}
+
+.menu-icon:hover {
+  border-radius: 999px;
+  background-color: white;
+}
+
+.nav-active.menu-icon path {
+  fill: #651fff !important;
+}
+.nav-active.menu-icon {
+  border-radius: 999px;
+  background-color: white;
+}
+
+.open-menu {
+  animation: 1s ease-in animateNavUp;
+}
+.close-menu {
+  animation: 1s ease-in animateNavDown;
+}
+@keyframes animateNavUp {
+  from {
+    top: 100%;
+  }
+  to {
+    bottom: 100px;
+  }
+}
+@keyframes animateNavDown {
+  from {
+    bottom: 100px;
+  }
+  to {
+    top: 100%;
+  }
+}

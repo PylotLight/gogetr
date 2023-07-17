@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>GoGetR</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"
+    integrity="sha384-9ndCyUaIbzAi2FUVXJi0CjmCapSmO7SnpJef0486qhLnuZ2cdeRhO02iuK6FUUVM" crossorigin="anonymous">
+</head>
+
+
+<body>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-geWF76RCwLtnZ8qwWowPQNguL3RmwHVBC9FhGdlKrxdiJJigb/j/68SIy3Te4Bkz" crossorigin="anonymous"></script>
+  <div class="container">
+
+
+    <!-- Text -->
+
+    <h1 class="title">Home</h1>
+
+    <div class="mainview">
+      <div id="homeview" class="home view viewactive">
+        <div class="button-grid">
+          <button type="button" onclick="changeMenu('download')">Download</button>
+          <button type="button" onclick="changeMenu('tasks')">Tasks</button>
+          <button type="button" onclick="changeMenu('settings')">Settings</button>
+          <button type="button" onclick="changeMenu('home')">Home</button>
+        </div>
+      </div>
+
+      <div id="tasksview" class="tasks view">
+        <form class="form" id="taskform" method="post" onsubmit="event.preventDefault();">
+          <div class="table-responsive-sm overflow-auto">
+            <form>
+              <table class="table table-sm overflow-auto">
+                <div class="form-group">
+                  <thead class="thead-dark">
+                    <tr>
+                      <th>Selected</th>
+                      <th>Description</th>
+                      <th style="width: 30%">Magnet</th>
+                      <th>LastModified</th>
+                    </tr>
+                  </thead>
+                  {{if .Files}}
+                  {{range .Files}}
+                  <tbody>
+                    <tr>
+                      <td><input class="form-check-input form-control" type="checkbox" value="" id="flexCheckDefault">
+                      </td>
+                      <td>{{.Description}}</td>
+                      <td>{{.Magnet}}</td>
+                      <td>{{.FileCreated}}</td>
+                    </tr>
+                    {{ end }}
+                    {{else}}
+                    <tr>
+                      <td><input class="form-check-input form-control" type="checkbox" value="" id="flexCheckDefault"
+                          disabled></td>
+                      <td>No Files Found..</td>
+                      <td></td>
+                      <td></td>
+                    </tr>
+                    {{end}}
+                </div>
+                </tbody>
+              </table>
+              <button type="submit" class="btn btn-primary" onclick="SendData()">Approve All</button>
+            </form>
+
+          </div>
+          <br />
+          <div class="menu-icon">
+
+            <div onclick="">
+              <svg width="26" height="26" fill="white" aria-placeholder="Load Tasks" xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 383.748 383.748" style="enable-background:new 0 0 383.748 383.748" xml:space="preserve">
+                <path
+                  d="M62.772 95.042C90.904 54.899 137.496 30 187.343 30c83.743 0 151.874 68.13 151.874 151.874h30C369.217 81.588 287.629 0 187.343 0c-35.038 0-69.061 9.989-98.391 28.888a182.423 182.423 0 0 0-47.731 44.705L2.081 34.641v113.365h113.91L62.772 95.042zM381.667 235.742h-113.91l53.219 52.965c-28.132 40.142-74.724 65.042-124.571 65.042-83.744 0-151.874-68.13-151.874-151.874h-30c0 100.286 81.588 181.874 181.874 181.874 35.038 0 69.062-9.989 98.391-28.888a182.443 182.443 0 0 0 47.731-44.706l39.139 38.952V235.742z" />
+              </svg>
+            </div>
+
+          </div>
+          <!-- <input type="submit" name="button" id="button" value="Load Tasks" onclick="loadXMLDoc()"/> -->
+        </form>
+      </div>
+
+      <div id="downloadview" class="download view">
+        <form class="form" id="downloadform" method="post" data-endpoint="api/youtube-download">
+          <div class="form-group">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Youtube Download</span>
+              </div>
+              <input name="link" id="link-input" type="text" class="form-control"
+                placeholder="https://www.youtube.com/watch?v=....">
+              <div class="input-group-append">
+                <input class="btn btn-primary" type="submit" id="submit-download" value="Submit" />
+              </div>
+            </div>
+          </div>
+        </form>
+        <form class="form" id="rddownloadform" method="post"  data-endpoint="api/rd-download">
+          <div class="form-group">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">RD Download</span>
+              </div>
+              <input name="link" id="link-input" type="text" class="form-control"
+                placeholder="Magnet:?">
+              <div class="input-group-append">
+                <input class="btn btn-primary" type="submit" id="rd-download" value="Submit" />
+              </div>
+            </div>
+          </div>
+        </form>
+      </div>
+
+
+      <div id="settingsview" class="settings view">
+        <form class="form" id="settingsform" method="post" onsubmit="event.preventDefault();">
+          <div class="form-group">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">APIKey</span>
+              </div>
+              <input name="APIKey" type="text" class="form-control" value="{{.Page.Config.APIKey}}">
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="button" onclick="UpdateSettings()">Save</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Import Folder</span>
+              </div>
+              <input name="Import" type="text" class="form-control" id="importField" value="{{.Page.Config.Import}}">
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#importfolderModal"
+                  onclick="GetFolders('import')">Select</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <div class="input-group mb-3">
+              <div class="input-group-prepend">
+                <span class="input-group-text">Export Folder</span>
+              </div>
+              <input name="Export" type="text" class="form-control" id="exportField" value="{{.Page.Config.Export}}">
+              <div class="input-group-append">
+                <button class="btn btn-primary" type="button" data-bs-toggle="modal" data-bs-target="#exportfolderModal"
+                  onclick="GetFolders('export')">Select</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" value="" id="flexCheckDefault">
+            <label class="form-check-label" for="flexCheckDefault">
+              Select all files
+            </label>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Import Modal -->
+    <div class="modal fade" id="importfolderModal" tabindex="-1" aria-labelledby="importfolderModalLabel"
+      aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="folderModalLabel">Select Import Folder</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="results" style="max-height: 350px; overflow-y: auto;">
+              {{ if .DirectoryData }}
+              {{ range .DirectoryData.Dirs }}
+              <div class="listItem listItem-border">
+                <div class=listItemBody style="padding-left: 0;padding-top: .5em;padding-bottom: .5em;">
+                  <div class=listItemBodyText>
+                    {{.}}
+                  </div>
+                </div>
+              </div>
+              {{ end }}
+              {{end}}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="GetFolders()">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="modal fade" id="exportfolderModal" tabindex="-1" aria-labelledby="folderModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="folderModalLabel">Select Export Folder</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="results" style="max-height: 350px; overflow-y: auto;">
+              {{/* {{ if .Folders }}
+              {{ range .Folders }}
+              <div class="listItem listItem-border">
+                <div class=listItemBody style="padding-left: 0;padding-top: .5em;padding-bottom: .5em;">
+                  <div class=listItemBodyText>
+                    {{.}}
+                  </div>
+                </div>
+              </div>
+              {{ end }}
+              {{end}} */}}
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary" onclick="GetFolders('export')">Save changes</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- File selection Modal -->
+    <!-- Scrollable modal -->
+    <div class="modal fade" id="rdFileSelectionModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="rdFileSelectionModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h1 class="modal-title fs-5" id="rdFileSelectionModalLabel">Modal title</h1>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <P>Test</P>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            <button type="button" class="btn btn-primary">Understood</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Menu -->
+    <div class="menu">
+      <div id="home" class="menu-icon" onclick="changeMenu('home')">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M6.75006 25.3909C4.679 25.3909 3.00006 23.7119 3.00006 21.6409V14.1409H1.75006C0.636433 14.1409 0.078725 12.7944 0.866181 12.007L12.1162 0.756986C12.6043 0.26883 13.3958 0.26883 13.8839 0.756986L25.1339 12.007C25.9214 12.7944 25.3637 14.1409 24.2501 14.1409H23.0001V21.6409C23.0001 23.7119 21.3211 25.3909 19.2501 25.3909H6.75006ZM13.0001 3.40864L4.6887 11.72C5.16269 11.8976 5.50006 12.3549 5.50006 12.8909V21.6409C5.50006 22.3312 6.05971 22.8909 6.75006 22.8909L9.25006 22.8896L9.25006 17.8909C9.25006 16.5102 10.3694 15.3909 11.7501 15.3909H14.2501C15.6308 15.3909 16.7501 16.5102 16.7501 17.8909L16.7501 22.8896L19.2501 22.8909C19.9404 22.8909 20.5001 22.3312 20.5001 21.6409V12.8909C20.5001 12.3549 20.8374 11.8976 21.3114 11.72L13.0001 3.40864ZM14.2501 17.8909H11.7501L11.7501 22.8896H14.2501L14.2501 17.8909Z"
+            fill="white" />
+        </svg>
+        <div class="tooltip" data-key="home">Home</div>
+      </div>
+      <div id="tasks" class="menu-icon" onclick="changeMenu('tasks')">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd"
+            d="M11.7524 0.390869H14.2524C16.2495 0.390869 17.882 1.95202 17.9961 3.92053L18.0024 4.14087V5.39087H21.7524C23.8235 5.39087 25.5024 7.0698 25.5024 9.14087V21.6409C25.5024 23.7119 23.8235 25.3909 21.7524 25.3909H4.25244C2.18137 25.3909 0.502441 23.7119 0.502441 21.6409V9.14087C0.502441 7.0698 2.18137 5.39087 4.25244 5.39087H8.00244V4.14087C8.00244 2.14377 9.56359 0.511293 11.5321 0.397235L11.7524 0.390869ZM23.0024 17.8909H3.00244V21.6409C3.00244 22.3312 3.56209 22.8909 4.25244 22.8909H21.7524C22.4428 22.8909 23.0024 22.3312 23.0024 21.6409V17.8909ZM21.7524 7.89087H4.25244C3.56209 7.89087 3.00244 8.45051 3.00244 9.14087V15.3909H23.0024V9.14087C23.0024 8.45051 22.4428 7.89087 21.7524 7.89087ZM14.2524 2.89087H11.7524C11.1114 2.89087 10.5831 3.37342 10.5109 3.99509L10.5024 4.14087V5.39087H15.5024V4.14087C15.5024 3.49982 15.0199 2.97149 14.3982 2.89928L14.2524 2.89087Z"
+            fill="white" />
+        </svg>
+        <div class="tooltip" data-key="tasks">Tasks</div>
+      </div>
+      <div id="download" class="menu-icon" onclick="changeMenu('download')">
+        <svg width="20pt" height="20pt" version="1.0" viewBox="0 0 980 910" xmlns="http://www.w3.org/2000/svg">
+          <g transform="translate(0 910) scale(.1 -.1)">
+            <path
+              d="m4511 9089c-192-15-347-91-476-232-170-184-171-193-181-1393l-7-801-75-7c-41-3-138-6-216-6-208-1-424-16-476-35-161-57-282-235-267-395 8-97-20-57 511-730 600-761 1113-1398 1175-1461 108-108 235-159 401-159s293 51 400 159c92 92 1515 1879 1636 2053 54 78 65 150 39 252-39 149-164 268-312 295-28 6-154 13-280 16-125 3-273 8-329 11l-101 6-7 791c-8 974-16 1104-67 1242-19 52-39 77-143 181-181 181-229 198-596 214-255 11-491 11-629-1z">
+            </path>
+            <path
+              d="m6300 7704v-354h540 540l35-37c85-90 165-293 875-2213 418-1129 442-1193 456-1222l15-28h147c287 0 463-50 697-199 43-28 83-51 88-51 4 0 5 10 1 23-11 37-389 980-704 1757-164 404-388 958-498 1230-389 961-427 1040-591 1200-138 136-212 178-361 206-91 16-461 32-907 37l-333 5v-354z">
+            </path>
+            <path
+              d="m2465 8040c-259-12-404-70-569-229-89-86-147-168-192-272-224-520-863-2070-1299-3154-255-633-309-774-301-782 3-3 29 9 58 27 260 165 385 206 675 220 100 4 190 13 200 18 13 8 88 198 257 654 1009 2724 1003 2709 1088 2788l43 40h538 537v350 350l-442-2c-244-1-510-4-593-8z">
+            </path>
+            <path
+              d="m1386 3490c-307-4-595-11-640-15-164-14-308-82-445-211-194-182-251-296-282-559-15-133-23-1329-10-1670 12-330 18-368 90-520 94-199 253-350 457-435 150-62 70-59 1839-71 1651-11 5657-4 6345 11 349 7 356 8 435 34 291 98 496 311 580 603 23 78 27 115 35 353 12 340 12 1150 0 1485-11 304-23 365-100 520-104 210-270 355-495 431-73 24-100 27-315 36-293 11-6732 18-7494 8zm2621-1069c60-26 136-102 160-159 8-20 21-64 27-97l13-60h693 694l12 66c20 107 59 170 140 222 63 41 146 60 234 54 89-6 153-31 210-83 102-92 119-181 103-522-12-240-17-260-86-338-84-96-115-99-1312-99-1202 0-1215 1-1308 105-72 78-72 80-72 410 0 348 2 358 91 439 74 68 147 92 264 88 61-3 100-10 137-26z">
+            </path>
+          </g>
+        </svg>
+        <div class="tooltip" data-key="download">Download</div>
+      </div>
+      <div id="settings" class="menu-icon" onclick="changeMenu('settings')">
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 297 297" fill="#fff"
+          xmlns:v="https://vecta.io/nano">
+          <path
+            d="M148.5 81.888c-36.73 0-66.612 29.882-66.612 66.612s29.882 66.612 66.612 66.612 66.612-29.882 66.612-66.612S185.23 81.888 148.5 81.888zm0 113.039c-25.599 0-46.427-20.827-46.427-46.427s20.827-46.427 46.427-46.427 46.427 20.827 46.427 46.427-20.828 46.427-46.427 46.427zm140.289-12.601l-18.21-10.514c1.454-7.658 2.188-15.469 2.188-23.313s-.734-15.655-2.188-23.313l18.21-10.514a10.092 10.092 0 0 0 3.694-13.787l-30.757-53.273c-2.787-4.826-8.955-6.48-13.787-3.694l-18.234 10.526c-11.872-10.249-25.607-18.192-40.355-23.332V10.093C189.35 4.519 184.831 0 179.257 0h-61.514c-5.574 0-10.093 4.519-10.093 10.093v21.022a124.63 124.63 0 0 0-40.355 23.332L49.061 43.92c-4.829-2.788-11.001-1.133-13.787 3.694L4.517 100.887a10.092 10.092 0 0 0 3.694 13.787l18.21 10.514c-1.454 7.658-2.188 15.469-2.188 23.313s.734 15.655 2.188 23.313l-18.21 10.514a10.092 10.092 0 0 0-3.694 13.787l30.757 53.273c2.787 4.827 8.957 6.482 13.787 3.694l18.234-10.526c11.872 10.249 25.607 18.192 40.355 23.332v21.022c0 5.574 4.519 10.093 10.093 10.093h61.514c5.574 0 10.093-4.519 10.093-10.093v-21.022a124.63 124.63 0 0 0 40.355-23.332l18.234 10.526c4.83 2.787 11.001 1.132 13.787-3.694l30.757-53.273a10.093 10.093 0 0 0-3.694-13.789zm-39.444-59.681c2.147 8.404 3.236 17.103 3.236 25.855s-1.089 17.45-3.236 25.855a10.091 10.091 0 0 0 4.732 11.239l15.878 9.167-20.664 35.792-15.908-9.184a10.094 10.094 0 0 0-12.104 1.526c-12.514 12.244-27.984 21.187-44.735 25.863a10.092 10.092 0 0 0-7.379 9.721v18.336h-41.329v-18.336c0-4.529-3.017-8.504-7.379-9.721-16.752-4.676-32.221-13.618-44.735-25.863a10.095 10.095 0 0 0-12.104-1.526l-15.908 9.184-20.664-35.792 15.878-9.167a10.091 10.091 0 0 0 4.732-11.239c-2.147-8.404-3.236-17.103-3.236-25.855s1.089-17.45 3.236-25.855a10.091 10.091 0 0 0-4.732-11.239l-15.878-9.167L47.71 66.447l15.908 9.184a10.092 10.092 0 0 0 12.104-1.526c12.514-12.244 27.984-21.187 44.735-25.863a10.092 10.092 0 0 0 7.379-9.721V20.185h41.329v18.336c0 4.529 3.017 8.504 7.379 9.721 16.752 4.676 32.221 13.618 44.735 25.863a10.092 10.092 0 0 0 12.104 1.526l15.908-9.184 20.664 35.792-15.878 9.167a10.094 10.094 0 0 0-4.732 11.239z" />
+        </svg>
+        <div class="tooltip" data-key="settings">Settings</div>
+      </div>
+      <span>{{.Page.Config.AppVersion}}</span>
+    </div>
+  </div>
+
+  <script src="/static/script.js"></script>
+</body>
+
+</html>
