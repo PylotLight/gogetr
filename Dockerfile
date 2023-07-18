@@ -2,7 +2,7 @@ FROM golang:1.20.6-alpine3.17 as builder
 RUN mkdir /build && apk --no-cache add ca-certificates
 ADD . /build/
 WORKDIR /build 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-s -w -X 'main.AppVersion=v0.9`date +.%Y%m%d`' -extldflags '-static'" -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-s -w -X 'main.AppVersion=v1.0`date +.%Y%m%d`' -extldflags '-static'" -o main .
 
 FROM scratch
 COPY --from=builder /build/main /app/
