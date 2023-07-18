@@ -76,6 +76,6 @@ func main() {
 	// http.HandleFunc("/browse", handleBrowse)
 	go eventLoop()
 	fmt.Println("Listening on http://localhost:9000")
-	log.Fatal("HTTP server error: ", http.ListenAndServe("localhost:9000", nil))
+	log.Fatal("HTTP server error: ", http.ListenAndServe("0.0.0.0:9000", nil))
 
 }

@@ -1,9 +1,8 @@
-FROM golang:1.20-alpine3.17 as builder
+FROM golang:1.20.6-alpine3.17 as builder
 RUN mkdir /build && apk --no-cache add ca-certificates
 ADD . /build/
 WORKDIR /build 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-s -w -X 'main.AppVersion=v0.9.0' -extldflags '-static'" -o main .
-# RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-X main.AppVersion=`date -u +.%Y%m%d.%H%M%S` -extldflags '-static'" -o main .
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -ldflags "-s -w -X 'main.AppVersion=v0.9`date +.%Y%m%d`' -extldflags '-static'" -o main .
 
 FROM scratch
 COPY --from=builder /build/main /app/
@@ -18,7 +17,7 @@ EXPOSE 9000
 CMD ["./main"]
 
 # docker build -t light37/gogetr:latest -f \\wsl.localhost\Debian\home\light\goget\Dockerfile \\wsl.localhost\Debian\home\light\goget
-# sudo docker build -t light37/gogetr:latest -f Dockerfile .
+# sudo docker build -t light37/gogetr:latest -t light37/gogetr:$(date +%Y%m%d) -f Dockerfile .
 # sudo docker push light37/gogetr:latest
 #sudo docker build -t light37/gogetr:latest -f Dockerfile . ; sudo docker push light37/gogetr:latest ; krr gogetr
 

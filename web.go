@@ -10,7 +10,6 @@ import (
 
 func handler(w http.ResponseWriter, r *http.Request) {
 	title := r.URL.Path[len("/"):]
-	// p, _ := loadPage(title, nil)
 	sendClientMessage("Connected to server")
 	files := GetDownloadItems()
 	p := struct {
@@ -25,21 +24,15 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		Config: GetConfig(),
 	}
 	t, err := template.ParseFS(staticFS, "static/*.html")
-	// data := map[string]interface{}{
-	// 	"obj1": context,
-	// 	"obj2": obj2,
-	// }
+
 	(*t).Execute(w, map[string]any{
 		"Page": p,
 		// "obj2": obj2,
 	})
 
-	// renderTemplate(w, "static/index", p)
-	// err = t.Execute(w, data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
-	// renderTemplate(w, "index", p)
 }
 
 func SSEhandler(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +41,7 @@ func SSEhandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Streaming unsupported", http.StatusInternalServerError)
 		return
 	}
-
+	fmt.Print("Request recieved", r)
 	w.Header().Set("Content-Type", "text/event-stream")
 	w.Header().Set("Cache-Control", "no-cache")
 	w.Header().Set("Connection", "keep-alive")
@@ -101,35 +94,6 @@ func eventLoop() {
 		}
 	}
 }
-
-// func loadPage(title string, folders []string) (*Page, error) {
-// 	files := GetDownloadItems()
-// 	return &Page{Title: title, Body: []byte(""), Files: files, Config: GetConfig()}, nil
-// }
-
-// func renderTemplate(w http.ResponseWriter, tmpl string, context interface{}) {
-// 	// t := template.Must(template.New(tmpl + ".html").Funcs(funcMap).ParseFiles(tmpl + ".html"))
-// 	// t, err := template.Must(template.New("static/hello.gohtml").Funcs(funcMap).ParseFiles("static/hello.gohtml")).ParseFiles("static/hello.gohtml")
-// 	t, err := template.ParseFS(templateFS, "static/*.html")
-// 	// t, err := template.ParseFiles(tmpl + ".html")
-
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// 	// data := map[string]interface{}{
-// 	// 	"obj1": context,
-// 	// 	"obj2": obj2,
-// 	// }
-// 	// (*Template).Execute(buf, map[string]any{
-// 	// 	"obj1": obj1,
-// 	// 	"obj2": obj2,
-// 	// })
-// 	err = t.Execute(w, context)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 	}
-// }
 
 func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the incoming data
