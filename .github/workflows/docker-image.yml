@@ -33,4 +33,4 @@ jobs:
       uses: docker/build-push-action@v4.1.1
       with:
         push: true
-        tags: light37/gogetr:$(date +%s)
+        tags: light37/gogetr:latest
