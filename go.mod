@@ -1,4 +1,4 @@
-module goget/goget
+module gogetr
 
 go 1.20
 
@@ -9,10 +9,10 @@ require (
 )
 
 require (
-	github.com/bitly/go-simplejson v0.5.1 // indirect
-	github.com/dlclark/regexp2 v1.10.0 // indirect
-	github.com/dop251/goja v0.0.0-20230605162241-28ee0ee714f3 // indirect
+	github.com/bitly/go-simplejson v0.5.0 // indirect
+	github.com/dlclark/regexp2 v1.9.0 // indirect
+	github.com/dop251/goja v0.0.0-20230402114112-623f9dda9079 // indirect
 	github.com/go-sourcemap/sourcemap v2.1.3+incompatible // indirect
-	github.com/google/pprof v0.0.0-20230602150820-91b7bce49751 // indirect
+	github.com/google/pprof v0.0.0-20230406165453-00490a63f317 // indirect
 	golang.org/x/text v0.9.0 // indirect
 )
