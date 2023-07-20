@@ -54,7 +54,7 @@ func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
 	re := regexp.MustCompile(`[\\/:*?"<>|]`)
 	videoTitle := re.ReplaceAllString(video.Title, "-")
 	// Get the video file name
-	title := GetConfig().Export + videoTitle + "." + "opus"
+	title := "/Music/" + videoTitle + "." + "opus"
 
 	// Log the video being downloaded
 	log.Printf("Downloading video: %s", title)
