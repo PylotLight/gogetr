@@ -90,35 +90,19 @@
       </div>
 
       <div id="downloadview" class="download view">
-        <form class="form" id="downloadform" method="post" >
-          <div class="form-group">
-            <div class="input-group mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">Youtube Download</span>
-              </div>
-              <input name="link" id="ytlink" type="text" class="form-control"  placeholder="https://www.youtube.com/watch?v=....">
-              <div class="input-group-append">
-                <button type="submit" class="btn btn-primary" id="submit-download" hx-include="[id='ytlink']" hx-post="api/ytdownload" data-hx-target="#download-status">Submit</button>
-              </div>
-            </div>
+        <form class="form" id="downloadform" method="post">
+          <div class="input-group mb-3">
+            <span class="input-group-text">Youtube Download</span>
+            <input name="link" id="ytlink" type="text" class="form-control" placeholder="https://www.youtube.com/watch?v=....">
+            <button type="submit" class="btn btn-primary" id="submit-download" hx-include="[id='ytlink']" hx-post="api/ytdownload" data-hx-target="#download-status">Submit</button>
           </div>
-          <div id="download-status" class="alert alert-info" role="alert">
-            <h4 class="alert-heading">Downloading...</h4>
-            <p>The download will start shortly.</p>
-          </div>
+          <div id="download-status" class="alert alert-info" role="alert"></div>
         </form>
-        <form class="form" id="rddownloadform" method="post"  data-endpoint="api/rddownload">
-          <div class="form-group">
-            <div class="input-group mb-3">
-              <div class="input-group-prepend">
-                <span class="input-group-text">RD Download</span>
-              </div>
-              <input name="rdlink" id="link-input" type="text" class="form-control"
-                placeholder="Magnet:?">
-              <div class="input-group-append">
-                <input class="btn btn-primary" type="submit" id="rd-download" value="Submit" />
-              </div>
-            </div>
+        <form class="form" id="rddownloadform" method="post" data-hx-post="api/rddownload">
+          <div class="input-group mb-3">
+            <span class="input-group-text">RD Download</span>
+            <input name="rdlink" id="link-input" type="text" class="form-control" placeholder="Magnet:?">
+            <button type="submit" class="btn btn-primary">Submit</button>
           </div>
         </form>
       </div>
