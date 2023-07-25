@@ -2,23 +2,6 @@
   const el = document.querySelector('.menu');
 })();
 
-// Attach an event listener to the window
-window.addEventListener('load', function() {
-  // Get the form element
-  var form = document.getElementById('downloadform');
-    // Attach an event listener to the form
-    form.addEventListener('submit', function(event) {
-        // Prevent the default form submission behavior
-        event.preventDefault();
-        
-        // Get the value of the input field
-        var inputValue = form.elements['link-input'].value;
-        
-        // Do something with the value...
-        sendLink(inputValue);
-    });
-});
-
 
 function addActiveClass(context) {
   // menu icons 
@@ -146,142 +129,50 @@ function UpdateSettings() {
   }
 }
 
-// Youtube Background Download
-
-function sendLink_old(url) {
-  // Get a reference to the submit button
-  const submitButton = document.getElementById('submit-download');
-  // Create a new XHR object
-  const xhr = new XMLHttpRequest();
-  // Open a new request
-  xhr.open('post', 'api/download', true);
-
-  // Set the request headers
-  xhr.setRequestHeader('Content-Type', 'application/json');
-
-  var data = {
-    'link': url
-  }
-
-  // Handle the response
-  xhr.onload = () => {
-    if (xhr.status === 200) {
-      document.getElementById('link-input').value = ''; 
-      // Request was successful, handle the response
-      const response = JSON.parse(xhr.response);
-      // TODO: Use the response data
-      console.log(response);
-      // Enable the submit button
-      submitButton.disabled = false;
-    } else {
-      // Request failed, handle the error
-      console.error(`Request failed: ${xhr.status}`);
-      // Enable the submit button
-      submitButton.disabled = false;
-    }
-  };
-
-  xhr.ontimeout = (e) => {
-  // XMLHttpRequest timed out. Do something here.
-    console.log("Error ontimeout");
-};
-
-
-  // Disable the submit button
-  submitButton.disabled = true;
-
-  // Send the request
-  xhr.send(JSON.stringify(data));
-}
-
-function sendLink(url) {
-  // Get a reference to the submit button
-  const submitButton = document.getElementById('submit-download');
-  // Create the request payload
-  const data = {
-    link: url
-  };
-
-  // Disable the submit button
-  submitButton.disabled = true;
-
-  // Send the request using Fetch API
-  fetch('api/downloadyt', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(data)
-  })
-    .then(response => {
-      if (response.ok) {
-        // Request was successful, handle the response
-        return response.json();
-      } else {
-        // Request failed, handle the error
-        throw new Error(`Request failed: ${response.status}`);
-      }
-    })
-    .then(responseData => {
-      // TODO: Use the response data
-      console.log(responseData);
-      // Clear the input field
-      document.getElementById('link-input').value = '';
-    })
-    .catch(error => {
-      // Handle any errors that occurred during the request
-      console.error(error);
-    })
-    .finally(() => {
-      // Enable the submit button
-      submitButton.disabled = false;
-    });
-}
-
-document.addEventListener('submit', function(event) {
-  event.preventDefault();
-  const form = event.target;
-  const endpoint = form.getAttribute('data-endpoint');
+// document.addEventListener('submit', function(event) {
+//   event.preventDefault();
+//   const form = event.target;
+//   const endpoint = form.getAttribute('data-endpoint');
   
-  const formData = new FormData(form);
-  const requestData = {};
-  for (let [name, value] of formData) {
-    requestData[name] = value;
-  }
-  
-  fetch(endpoint, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(requestData)
-  })
-    .then(response => {
-      if (response.ok) {
-        return response.json();
-      } else {
-        throw new Error(`Request failed: ${response.status}`);
-      }
-    })
-    .then(responseData => {
-      console.log(responseData);
-      form.reset();
-      // We want to show a modal with a list of files to select then send that response back to the server.
-      // once the server selects the files and downloads, a notifcation will be sent.
-      // We then may want to be able to download that directly and auto unrestrict that link instead of going to server?
-      if('RD' in responseData['TorrentInfo'][files]){
-        console.log('test')
+//   const formData = new FormData(form);
+//   const requestData = {};
+//   for (let [name, value] of formData) {
+//     requestData[name] = value;
+//   }
 
-        const filemodal = new bootstrap.Modal('#rdFileSelectionModal', {
-          keyboard: true, backdrop: false, focus:true
-        }).show()
-        console.log(filemodal)
-      }
-    })
-    .catch(error => {
-      console.error(error);
-    });
-});
+//   fetch(endpoint, {
+//     method: 'POST',
+//     headers: {
+//       'Content-Type': 'application/json'
+//     },
+//     body: JSON.stringify(requestData)
+//   })
+//     .then(response => {
+//       if (response.ok) {
+//         return response.json();
+//       } else {
+//         throw new Error(`Request failed: ${response.status}`);
+//       }
+//     })
+//     .then(responseData => {
+//       console.log(responseData);
+//       form.reset();
+//       // We want to show a modal with a list of files to select then send that response back to the server.
+//       // once the server selects the files and downloads, a notifcation will be sent.
+//       // We then may want to be able to download that directly and auto unrestrict that link instead of going to server?
+//       if('RD' in responseData['TorrentInfo'][files]){
+//         console.log('test')
+
+//         const filemodal = new bootstrap.Modal('#rdFileSelectionModal', {
+//           keyboard: true, backdrop: false, focus:true
+//         }).show()
+//         console.log(filemodal)
+//       }
+//     })
+//     .catch(error => {
+//       console.error(error);
+//     });
+// });
 
 
 // Settings folder browser
@@ -365,8 +256,13 @@ eventSource.onopen = (e) => {
   // displayNotification(e.data)
 }
 eventSource.onmessage = (e) => {
-  console.log("New Message from the server!\n", e);
-  enqueueNotification(JSON.parse(e.data)['message'])
+  responseJson = JSON.parse(e.data)
+  console.log("New Message from the server!\n", responseJson);
+  if(responseJson['message'].includes("Next scan")){
+    document.getElementById("ScanTime").innerText = responseJson['message'];
+    return
+  } 
+  enqueueNotification(responseJson['message'])
   // displayNotification(JSON.parse(e.data)['message']);
 }
 eventSource.onerror = (e) => {

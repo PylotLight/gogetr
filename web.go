@@ -95,14 +95,12 @@ func eventLoop() {
 }
 
 func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse the incoming data
-	var data Data
 
-	err := json.NewDecoder(r.Body).Decode(&data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	if err := r.ParseForm(); err != nil {
+		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
 		return
 	}
+	link := r.FormValue("link")
 
 	// Define the response data
 	responseData := struct {
@@ -111,13 +109,12 @@ func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 	}{}
 
 	// Log that we received the link
-	fmt.Println("Got link:", data.Link)
+	fmt.Println("Got link:", link)
 
 	// Launch a goroutine to handle the long-running task
 	go func() {
 		// Log that the goroutine has started
-		// fmt.Println("Goroutine started")
-		err = GetMedia(data.Link)
+		err := GetMedia(link)
 		if err != nil {
 			responseData.Message = err.Error()
 			responseData.Success = false
@@ -125,17 +122,6 @@ func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 			responseData.Message = "Audio downloaded successfully"
 			responseData.Success = true
 		}
-
-		// Log that the goroutine has completed
-		// fmt.Println("Goroutine completed")
-
-		// Wait for a few seconds to make sure download is complete
-		// if w == nil {
-		// 	log.Println("Response writer is nil")
-		// 	return
-		// } else {
-		// 	log.Println("Response writer is not nil")
-		// }
 	}()
 
 	// Set the response headers

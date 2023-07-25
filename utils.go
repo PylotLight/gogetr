@@ -29,9 +29,9 @@ func scheduler() {
 		config.LastRunTime = time.Now().In(config.NextRunTime.Location())
 		config.NextRunTime = config.LastRunTime.Add(time.Minute + 2)
 		SetConfig(config)
-		nextrunTime := "Next run time: " + config.NextRunTime.Format(time.ANSIC)
+		nextrunTime := "Next scan time: " + config.NextRunTime.Format(time.ANSIC)
 		println(nextrunTime)
-		sendClientMessage("Next scan for torrent files at: " + config.NextRunTime.Local().Format(time.Kitchen))
+		sendClientMessage("Next scan at: " + config.NextRunTime.Local().Format(time.Kitchen))
 		time.Sleep(time.Minute * 1)
 	}
 }

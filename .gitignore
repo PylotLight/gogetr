@@ -22,5 +22,6 @@ go.work
 Files/*
 config/*
 .vscode/*
-_debug_bin
+_debug_bin*
 go.sum
+__debug_bin*
