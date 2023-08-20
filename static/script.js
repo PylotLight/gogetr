@@ -2,7 +2,6 @@
   const el = document.querySelector('.menu');
 })();
 
-
 function addActiveClass(context) {
   // menu icons 
   
