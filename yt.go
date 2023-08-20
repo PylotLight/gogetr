@@ -75,10 +75,15 @@ func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
 	defer file.Close()
 
 	// Copy the video stream to the file
-	_, err = io.Copy(file, stream)
+	written, err := io.Copy(file, stream)
 	if err != nil {
 		// Return the error if it occurs
 		return fmt.Errorf("error copying video stream to file: %v", err)
+	}
+	if written == 0 {
+		log.Fatal("Written 0 Bytes!")
+		sendClientMessage("Written 0 Bytes")
+		return nil
 	}
 	sendClientMessage("Finished downloading video: " + videoTitle)
 	// Log that the download is finished
