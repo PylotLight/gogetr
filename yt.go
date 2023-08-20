@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 
 	"github.com/kkdai/youtube/v2"
 )
@@ -49,45 +50,30 @@ func GetMedia(link string) error {
 }
 
 func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
-	// Create a youtube client
 	client := youtube.Client{}
 	re := regexp.MustCompile(`[\\/:*?"<>|]`)
 	videoTitle := re.ReplaceAllString(video.Title, "-")
-	// Get the video file name
 	title := "/Music/" + videoTitle + "." + "opus"
-
-	// Log the video being downloaded
-	log.Printf("Downloading video: %s", title)
-	sendClientMessage("Downloading video to path: " + title)
-	// Get the video stream from youtube
-	stream, _, err := client.GetStream(video, format)
+	stream, size, err := client.GetStream(video, format)
 	if err != nil {
-		// Return the error if it occurs
 		return fmt.Errorf("error getting video stream: %v", err)
 	}
-
-	// Open the file for writing
+	log.Printf("Downloading video: %s", title)
+	sendClientMessage("Downloading " + strconv.FormatInt(size, 10) + " bytes to path: " + title)
 	file, err := os.Create(title)
 	if err != nil {
-		// Return the error if it occurs
 		return fmt.Errorf("error creating file: %v", err)
 	}
 	defer file.Close()
-
-	// Copy the video stream to the file
-	written, err := io.Copy(file, stream)
+	// Create a buffer to read the response body into.
+	buf := make([]byte, 4096)
+	// Read the response body into the buffer, and write it to the file.
+	n, err := io.CopyBuffer(file, stream, buf)
 	if err != nil {
-		// Return the error if it occurs
-		return fmt.Errorf("error copying video stream to file: %v", err)
-	}
-	if written == 0 {
-		log.Fatal("Written 0 Bytes!")
-		sendClientMessage("Written 0 Bytes")
-		return nil
+		return err
 	}
 	sendClientMessage("Finished downloading video: " + videoTitle)
-	// Log that the download is finished
-	log.Println("Finished downloading video")
+	log.Printf("Copied %d bytes\n", n)
 
 	return nil
 }

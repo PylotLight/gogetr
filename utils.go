@@ -328,14 +328,13 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) error {
 						panic(err)
 					}
 					defer fileHandle.Close()
-
-					_, err = io.Copy(fileHandle, resp.Body)
+					buf := make([]byte, 16384)
+					n, err := io.CopyBuffer(fileHandle, resp.Body, buf)
 					if err != nil {
-						panic(err)
+						return err
 					}
-					// defer file.Close()
 					sendClientMessage("Downloaded " + UnrestrictedLink.Filename)
-					fmt.Printf("Downloaded a file %s with size %d", UnrestrictedLink.Filename, UnrestrictedLink.Filesize)
+					fmt.Printf("Downloaded a file %s with size %d and bytes copied %d", UnrestrictedLink.Filename, UnrestrictedLink.Filesize, n)
 
 				}
 				DeleteFile(ndf.Filename)
