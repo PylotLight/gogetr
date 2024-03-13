@@ -1,4 +1,4 @@
-FROM golang:1.21-alpine3.18 as builder
+FROM golang:1.22-alpine3.18 as builder
 RUN mkdir /build && apk --no-cache add ca-certificates
 ADD . /build/
 WORKDIR /build 
