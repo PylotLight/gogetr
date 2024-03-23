@@ -4,7 +4,7 @@
 
 function addActiveClass(context) {
   // menu icons 
-  
+
   navItem = document.getElementById(context);
   navItems.forEach((nav) => {
     nav.classList.remove('nav-active');
@@ -12,13 +12,13 @@ function addActiveClass(context) {
   navItem.classList.add('nav-active');
 
   //view toggle
-/*
-- click menu option
-- find all views and remove active class(which sets opacity)
-- add active class to selected view
-- run function for pulling data and displaying in view
-
-*/
+  /*
+  - click menu option
+  - find all views and remove active class(which sets opacity)
+  - add active class to selected view
+  - run function for pulling data and displaying in view
+  
+  */
   const allviews = document.querySelectorAll("[class*=' view']");
   const selectedview = document.querySelector('[class*=' + context + ']');
   // console.log('[class$=' + context + ']');
@@ -60,7 +60,7 @@ function changeMenu(context) {
 function addToolTip(key) {
   removeTooltips();
   const toolTips = document.querySelectorAll('.tooltip');
- 
+
   toolTips.forEach((tooltip) => {
     if (tooltip.getAttribute('data-key') == key) {
       tooltip.style.opacity = '1';
@@ -92,19 +92,19 @@ function SendData() {
   // var data = new FormData(document.getElementById("taskform"))
   // // console.log(data);
   // let post = JSON.stringify(data)
-  
+
   // console.log(post);
   const url = "api/tasks"
   let xhr = new XMLHttpRequest()
-   
+
   xhr.open('POST', url, true)
   xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8')
   xhr.send("Yes");
-   
+
   xhr.onload = function () {
-      if(xhr.status === 201) {
-          console.log("Post successfully created!") 
-      }
+    if (xhr.status === 201) {
+      console.log("Post successfully created!")
+    }
   }
 }
 
@@ -112,19 +112,19 @@ function UpdateSettings() {
   var formData = new FormData(document.getElementById("settingsform"))
   // console.log(formData);
   let post = JSON.stringify(Object.fromEntries(formData));//JSON.stringify(data)
-  
+
   // console.log(post);
   const url = "api/settings"
   let xhr = new XMLHttpRequest()
-   
+
   xhr.open('POST', url, true)
   xhr.setRequestHeader('Content-type', 'application/json; charset=UTF-8')
   xhr.send(post);
-   
+
   xhr.onload = function () {
-      if(xhr.status === 201) {
-          console.log("Post successfully created!") 
-      }
+    if (xhr.status === 201) {
+      console.log("Post successfully created!")
+    }
   }
 }
 
@@ -132,7 +132,7 @@ function UpdateSettings() {
 //   event.preventDefault();
 //   const form = event.target;
 //   const endpoint = form.getAttribute('data-endpoint');
-  
+
 //   const formData = new FormData(form);
 //   const requestData = {};
 //   for (let [name, value] of formData) {
@@ -178,7 +178,7 @@ function UpdateSettings() {
 
 function GetFolders(type) {
 
-  const data = document.getElementById(type+"Field").value;
+  const data = document.getElementById(type + "Field").value;
   fetch('api/getfolders?' + data)
     .then(res => res.json())
     .then(res => console.log(res))
@@ -196,12 +196,12 @@ function showToast(message) {
 
   // Create progress bar
   const progressBar = document.createElement('div');
-  progressBar.classList.add('progress-bar','bg-info');
+  progressBar.classList.add('progress-bar', 'bg-info');
   progressBar.role = 'progressBar';
   toast.appendChild(progressBar);
 
   // Animate the progress bar
-  const duration = 3000; // Adjust the duration as needed
+  const duration = 1500; // Adjust the duration as needed
   let startTime = Date.now();
 
   const animateProgressBar = () => {
@@ -243,24 +243,24 @@ function enqueueNotification(message) {
 
 const eventSource = new EventSource("/api/handshake");
 
-eventSource.addEventListener("close", function(event) {
+eventSource.addEventListener("close", function (event) {
   // Handle SSE close event
   console.log(event);
   alert("Connection with the server has been lost..");
 }, false);
 
 eventSource.onopen = (e) => {
-  console.log("The connection has been established." , e);
+  console.log("The connection has been established.", e);
   enqueueNotification(e.data)
   // displayNotification(e.data)
 }
 eventSource.onmessage = (e) => {
   responseJson = JSON.parse(e.data)
   console.log("New Message from the server!\n", responseJson);
-  if(responseJson['message'].includes("Next scan")){
+  if (responseJson['message'].includes("Next scan")) {
     document.getElementById("ScanTime").innerText = responseJson['message'];
     return
-  } 
+  }
   enqueueNotification(responseJson['message'])
   // displayNotification(JSON.parse(e.data)['message']);
 }

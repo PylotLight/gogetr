@@ -13,27 +13,71 @@ import (
 	"strings"
 	"time"
 
+	"github.com/fsnotify/fsnotify"
 	"github.com/zeebo/bencode"
 	"gopkg.in/yaml.v3"
 )
 
 var ConfigFile = "config/config.yaml"
 
-func scheduler() {
-	for {
-		config := GetConfig()
-		CurrentTime := time.Now().In(config.NextRunTime.Location())
-		if config.NextRunTime.Before(CurrentTime) {
-			ProcessNewFiles()
-		}
-		config.LastRunTime = time.Now().In(config.NextRunTime.Location())
-		config.NextRunTime = config.LastRunTime.Add(time.Minute + 2)
-		SetConfig(config)
-		nextrunTime := "Next scan time: " + config.NextRunTime.Format(time.ANSIC)
-		println(nextrunTime)
-		sendClientMessage("Next scan at: " + config.NextRunTime.Local().Format(time.Kitchen))
-		time.Sleep(time.Minute * 1)
+// func scheduler() {
+// 	for {
+// 		config := GetConfig()
+// 		// CurrentTime := time.Now().In(config.NextRunTime.Location())
+// 		// if config.NextRunTime.Before(CurrentTime) {
+// 		ProcessNewFiles()
+// 		// }
+// 		config.LastRunTime = time.Now().In(config.NextRunTime.Location())
+// 		config.NextRunTime = config.LastRunTime.Add(time.Minute + 2)
+// 		SetConfig(config)
+// 		nextrunTime := "Next scan time: " + config.NextRunTime.Format(time.ANSIC)
+// 		println(nextrunTime)
+// 		sendClientMessage("Next scan at: " + config.NextRunTime.Local().Format(time.Kitchen))
+// 		time.Sleep(time.Minute * 1)
+// 	}
+// }
+
+func watcher() {
+	// Create new watcher.
+	watcher, err := fsnotify.NewWatcher()
+	config := GetConfig()
+	if err != nil {
+		log.Fatal(err)
 	}
+	defer watcher.Close()
+
+	// Start listening for events.
+	go func() {
+		for {
+			select {
+			case event, ok := <-watcher.Events:
+				if !ok {
+					return
+				}
+				// log.Println("event:", event)
+				if event.Has(fsnotify.Create) {
+					time.Sleep(time.Second * 1)
+					log.Println("New file detected:", event.Name)
+					sendClientMessage("New file " + event.Name + " detected at: " + time.Now().Local().Format(time.Kitchen))
+					ProcessNewFiles()
+				}
+			case err, ok := <-watcher.Errors:
+				if !ok {
+					return
+				}
+				log.Println("error:", err)
+			}
+		}
+	}()
+
+	// Add a path.
+	err = watcher.Add(config.Import)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Block main goroutine forever.
+	<-make(chan struct{})
 }
 
 func SetConfig(Configuration Configuration) {

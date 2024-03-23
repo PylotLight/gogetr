@@ -57,7 +57,7 @@ func init() {
 }
 
 func main() {
-	go scheduler()
+	go watcher()
 	// Build
 	staticSubFS, _ := fs.Sub(staticFS, "static")
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticSubFS))))
