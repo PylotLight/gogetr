@@ -391,10 +391,10 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) error {
 			}
 		default:
 			{
-				j, _ := json.Marshal(files)
+				// j, _ := json.Marshal(files)
 				println("Waiting for 30 seconds.. Torrent Progress:", files.Progress)
 				sendClientMessage("Waiting for 30 seconds.. Torrent Progress: " + fmt.Sprint(files.Progress))
-				println(string(j))
+				// println(string(j))
 				time.Sleep(30 * time.Second)
 			}
 		}
