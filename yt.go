@@ -53,7 +53,7 @@ func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
 	client := youtube.Client{}
 	re := regexp.MustCompile(`[\\/:*?"<>|]`)
 	videoTitle := re.ReplaceAllString(video.Title, "-")
-	title := "/Music/" + videoTitle + "." + "opus"
+	title := "Music/" + videoTitle + "." + "opus"
 	stream, size, err := client.GetStream(video, format)
 	if err != nil {
 		return fmt.Errorf("error getting video stream: %v", err)
