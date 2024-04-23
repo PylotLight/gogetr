@@ -53,14 +53,22 @@ func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
 	client := youtube.Client{}
 	re := regexp.MustCompile(`[\\/:*?"<>|]`)
 	videoTitle := re.ReplaceAllString(video.Title, "-")
-	title := "/Music/" + videoTitle + "." + "opus"
+	var FileName string
+	println(GetConfig().APIKey)
+	switch GetConfig().APIKey {
+	case "You must set an API Key":
+		FileName = "Music/" + videoTitle + "." + "opus"
+	default:
+		FileName = "/Music/" + videoTitle + "." + "opus"
+	}
+
 	stream, size, err := client.GetStream(video, format)
 	if err != nil {
 		return fmt.Errorf("error getting video stream: %v", err)
 	}
-	log.Printf("Downloading video: %s", title)
-	sendClientMessage("Downloading " + strconv.FormatInt(size, 10) + " bytes to path: " + title)
-	file, err := os.Create(title)
+	log.Printf("Downloading video: %s", FileName)
+	sendClientMessage("Downloading " + strconv.FormatInt(size, 10) + " bytes to path: " + FileName)
+	file, err := os.Create(FileName)
 	if err != nil {
 		return fmt.Errorf("error creating file: %v", err)
 	}
