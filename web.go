@@ -102,36 +102,17 @@ func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	link := r.FormValue("link")
 
-	// Define the response data
-	responseData := struct {
-		Message string `json:"message"`
-		Success bool   `json:"success"`
-	}{}
-
-	// Create a channel to communicate between the main thread and the goroutine
-	ch := make(chan struct{})
-	go func() {
-		// Log that the goroutine has started
-		fmt.Println("Got link:", link)
-
-		// Download the media
-		err := GetMedia(link)
-		if err != nil {
-			responseData.Message = err.Error()
-			responseData.Success = false
-		} else {
-			responseData.Message = "Audio downloaded successfully"
-			responseData.Success = true
-		}
-		// Send the results of the download back to the main thread
-		ch <- struct{}{}
-	}()
-	// Wait for the goroutine to finish
-	<-ch
+	go GetMedia(link) // Run the download in the background
 
 	// Set the response headers
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(responseData)
+	json.NewEncoder(w).Encode(struct {
+		Message string `json:"message"`
+		Success bool   `json:"success"`
+	}{
+		Message: "Audio download started successfully",
+		Success: true,
+	})
 }
 
 func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {

@@ -8,7 +8,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require golang.org/x/sys v0.18.0 // indirect
+require (
+	github.com/kr/pretty v0.3.1 // indirect
+	golang.org/x/sys v0.18.0 // indirect
+)
 
 require (
 	github.com/bitly/go-simplejson v0.5.1 // indirect
