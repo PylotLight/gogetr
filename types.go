@@ -46,6 +46,7 @@ type NewDownloadFile struct {
 	Magnet       string
 	FileCreated  time.Time
 	LastModified time.Time
+	local        bool
 }
 
 type TorrentMulti struct {

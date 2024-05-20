@@ -135,7 +135,9 @@ func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 	resp, _ := RDAPI[MagnetCreated]("POST", "torrents/addMagnet", body)
 	ID := resp.ID
 	ndf.Magnet = link
-	AutoHandleNewFile(ID, ndf)
+	ndf.local = false
+	go AutoHandleNewFile(ID, ndf)
+	sendClientMessage("Submitted download for " + ID)
 	// files, _ := RDAPI[TorrentInfo]("GET", "torrents/info/"+ID, "")
 	// responseData.TorrentInfo = files
 	// responseData.Success = true
@@ -144,7 +146,7 @@ func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 	// w.Header().Set("Content-Type", "application/json")
 
 	// Write the JSON response
-	sendClientMessage("Submitted download for " + ID)
+
 	// json.NewEncoder(w).Encode(responseData)
 }
 

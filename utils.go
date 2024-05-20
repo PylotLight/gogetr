@@ -248,7 +248,7 @@ func GetMagnetLink(NewFile NewDownloadFile) NewDownloadFile {
 		NewFile.Magnet = string(filedata)
 		return NewFile
 	}
-
+	NewFile.local = true
 	return NewFile
 }
 
@@ -356,10 +356,15 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) error {
 			}
 		case "downloaded":
 			{
+
 				Downloaded = true
 				for _, i := range files.Links {
 					UnrestrictedLink, _ := RDAPI[UnrestrictedLink]("POST", "unrestrict/link/"+TaskID, "link="+i)
-
+					if !ndf.local {
+						sendClientMessage("Download here: " + UnrestrictedLink.Download)
+						// DeleteFile(ndf.Filename)
+						return nil
+					}
 					resp, err := http.Get(UnrestrictedLink.Download)
 					if err != nil {
 						log.Fatal(err)
