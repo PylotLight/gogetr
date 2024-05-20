@@ -314,7 +314,7 @@ func RDAPI[T any](Method string, Endpoint string, Body string) (T, error) {
 }
 
 // select the files
-func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) error {
+func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) (UnrestrictedLink, error) {
 	var fileselection []string
 	var Downloaded bool
 	config := GetConfig()
@@ -359,18 +359,18 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) error {
 
 				Downloaded = true
 				for _, i := range files.Links {
-					UnrestrictedLink, _ := RDAPI[UnrestrictedLink]("POST", "unrestrict/link/"+TaskID, "link="+i)
+					unrestrictedLink, _ := RDAPI[UnrestrictedLink]("POST", "unrestrict/link/"+TaskID, "link="+i)
 					if !ndf.local {
-						sendClientMessage("Download here: " + UnrestrictedLink.Download)
+						sendClientMessage("Download ready for: " + unrestrictedLink.Filename)
 						// DeleteFile(ndf.Filename)
-						return nil
+						return unrestrictedLink, nil
 					}
-					resp, err := http.Get(UnrestrictedLink.Download)
+					resp, err := http.Get(unrestrictedLink.Download)
 					if err != nil {
 						log.Fatal(err)
 					}
 					defer resp.Body.Close()
-					FullName := config.Export + UnrestrictedLink.Filename
+					FullName := config.Export + unrestrictedLink.Filename
 					println("Downloading:", FullName)
 					fileHandle, err := os.OpenFile(FullName, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 					if err != nil {
@@ -380,10 +380,10 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) error {
 					buf := make([]byte, 16384)
 					n, err := io.CopyBuffer(fileHandle, resp.Body, buf)
 					if err != nil {
-						return err
+						return UnrestrictedLink{}, err
 					}
-					sendClientMessage("Downloaded " + UnrestrictedLink.Filename)
-					fmt.Printf("Downloaded a file %s with size %d and bytes copied %d", UnrestrictedLink.Filename, UnrestrictedLink.Filesize, n)
+					sendClientMessage("Downloaded " + unrestrictedLink.Filename)
+					fmt.Printf("Downloaded a file %s with size %d and bytes copied %d", unrestrictedLink.Filename, unrestrictedLink.Filesize, n)
 
 				}
 				DeleteFile(ndf.Filename)
@@ -392,7 +392,7 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) error {
 			{
 				fmt.Println("Skipping dud file " + files.ID)
 				DeleteFile(ndf.Filename)
-				return nil
+				return UnrestrictedLink{}, fmt.Errorf("Dud file")
 			}
 		default:
 			{
@@ -405,7 +405,7 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) error {
 		}
 	}
 
-	return nil
+	return UnrestrictedLink{}, nil
 }
 
 // func ManualFileSelection(link string) {

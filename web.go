@@ -136,16 +136,17 @@ func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 	ID := resp.ID
 	ndf.Magnet = link
 	ndf.local = false
-	go AutoHandleNewFile(ID, ndf)
-	sendClientMessage("Submitted download for " + ID)
-	// files, _ := RDAPI[TorrentInfo]("GET", "torrents/info/"+ID, "")
-	// responseData.TorrentInfo = files
-	// responseData.Success = true
+	sendClientMessage("Submitted download for " + resp.ID)
+	unrestrictedLink, err := AutoHandleNewFile(ID, ndf)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+	}
+	w.Header().Set("Content-Type", "text/html")
+	// Your HTML content goes here
+	fmt.Fprint(w, "<pre>Link is downloaded, grab from here:\n"+unrestrictedLink.Download+"</pre>")
 
 	// Set the response headers
 	// w.Header().Set("Content-Type", "application/json")
-
-	// Write the JSON response
 
 	// json.NewEncoder(w).Encode(responseData)
 }
