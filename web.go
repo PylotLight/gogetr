@@ -143,7 +143,7 @@ func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "text/html")
 	// Your HTML content goes here
-	fmt.Fprint(w, "<pre>Link is downloaded, grab from here:\n"+unrestrictedLink.Download+"</pre>")
+	fmt.Fprint(w, "<pre>Link is downloaded, grab from here:\n<a href='"+unrestrictedLink.Download+"'>"+unrestrictedLink.Filename+"</a></pre>")
 
 	// Set the response headers
 	// w.Header().Set("Content-Type", "application/json")
