@@ -117,7 +117,9 @@ func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 
 func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the incoming data
-	var data Data
+	var data struct {
+		rdlink string
+	}
 	var ndf NewDownloadFile
 	err := json.NewDecoder(r.Body).Decode(&data)
 	if err != nil {
@@ -138,10 +140,10 @@ func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Launch a goroutine to handle the long-running task
 	// go func() {
-	body := "magnet=" + data.Link
+	body := "magnet=" + data.rdlink
 	resp, _ := RDAPI[MagnetCreated]("POST", "torrents/addMagnet", body)
 	ID := resp.ID
-	ndf.Magnet = data.Link
+	ndf.Magnet = data.rdlink
 	files, _ := RDAPI[TorrentInfo]("GET", "torrents/info/"+ID, "")
 	responseData.TorrentInfo = files
 	responseData.Success = true
