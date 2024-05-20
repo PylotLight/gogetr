@@ -362,7 +362,6 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) (UnrestrictedLink, er
 					unrestrictedLink, _ := RDAPI[UnrestrictedLink]("POST", "unrestrict/link/"+TaskID, "link="+i)
 					if !ndf.local {
 						sendClientMessage("Download ready for: " + unrestrictedLink.Filename)
-						// DeleteFile(ndf.Filename)
 						return unrestrictedLink, nil
 					}
 					resp, err := http.Get(unrestrictedLink.Download)

@@ -102,17 +102,29 @@ func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	link := r.FormValue("link")
 
-	go GetMedia(link) // Run the download in the background
+	go func() {
+		err := GetMedia(link)
+		if err != nil {
+			w.Header().Set("Content-Type", "text/html")
+			// Your HTML content goes here
+			fmt.Fprint(w, "<pre>Download failed for some reason</pre>")
+			return
+		}
+
+		w.Header().Set("Content-Type", "text/html")
+		// Your HTML content goes here
+		fmt.Fprint(w, "<pre>Download was successfull</pre>")
+	}() // Run the download in the background
 
 	// Set the response headers
-	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(struct {
-		Message string `json:"message"`
-		Success bool   `json:"success"`
-	}{
-		Message: "Audio download started successfully",
-		Success: true,
-	})
+	// w.Header().Set("Content-Type", "application/json")
+	// json.NewEncoder(w).Encode(struct {
+	// 	Message string `json:"message"`
+	// 	Success bool   `json:"success"`
+	// }{
+	// 	Message: "Audio download started successfully",
+	// 	Success: true,
+	// })
 }
 
 func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
