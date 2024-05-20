@@ -117,16 +117,8 @@ func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 
 func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the incoming data
-	var data struct {
-		rdlink string
-	}
 	var ndf NewDownloadFile
-	err := json.NewDecoder(r.Body).Decode(&data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
+	link := r.FormValue("rdlink")
 	// Now we have a list of files, we return this to the user to select, then capture response again.
 	// ManualFileSelection(ID)
 	// HandleNewFile(ID, ndf) //Get available files to select  GET /torrents/info/{id} //Select the relevant files from the torrent POST /torrents/selectFiles/{id}
@@ -140,10 +132,10 @@ func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Launch a goroutine to handle the long-running task
 	// go func() {
-	body := "magnet=" + data.rdlink
+	body := "magnet=" + link
 	resp, _ := RDAPI[MagnetCreated]("POST", "torrents/addMagnet", body)
 	ID := resp.ID
-	ndf.Magnet = data.rdlink
+	ndf.Magnet = link
 	files, _ := RDAPI[TorrentInfo]("GET", "torrents/info/"+ID, "")
 	responseData.TorrentInfo = files
 	responseData.Success = true
