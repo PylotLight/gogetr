@@ -15,17 +15,18 @@ import (
 4. Setup RD API Rest funcs starting with the gets, then the posts done
 5. Setup web interface done
 6. dockrise done
+- Clean up home page with nicer dashboard of buttons - done
+- music download notification - done
+- remove exessive logging (debug flag) - done
 New:
-1. better file type selector on the settings page - na
-2. replace html with better templating? - na
-3. better error handling for RD file selection and API stuff - maby
-4. remove exessive logging (debug flag) - done
-5. fix select all files setting to apply on selection - maby
-6. fix import/export folder to have directory searcher to select paths - maby
-7. ability to add custom torrents like games or movies etc outside of sonarr. magnet selector with display for items to select.
-8. show download progress so that we dont have to check folder
-9. Clean up home page with nicer dashboard of buttons - done
-10. music download notification - done
+- better file type selector on the settings page - na
+- replace html with better templating? - na
+- better error handling for RD file selection and API stuff - maby
+- fix select all files setting to apply on selection - maby
+- fix import/export folder to have directory searcher to select paths - maby
+- ability to add custom torrents like games or movies etc outside of sonarr. magnet selector with display for items to select.
+- show download progress so that we dont have to check folder
+-  add web torrent add.
 */
 
 //go:embed static/*.html

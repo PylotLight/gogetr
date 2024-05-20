@@ -28,11 +28,6 @@ func GetMedia(link string) error {
 		// Get the first video in the playlist
 		println("Playlist found, number of videos:", len(playlist.Videos))
 		for _, video := range playlist.Videos {
-			// videoID, err := youtube.ExtractVideoID(video.ID)
-			// if err != nil {
-			// 	// Return the error if it occurs
-			// 	return fmt.Errorf("error extracting video ID: %v", err)
-			// }
 			videoIDs = append(videoIDs, video.ID)
 		}
 	}
@@ -83,8 +78,15 @@ func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
 	client := youtube.Client{}
 	re := regexp.MustCompile(`[\\/:*?"<>|]`)
 	videoTitle := re.ReplaceAllString(video.Title, "-")
-	title := "/Music/" + videoTitle + "." + "opus"
+	config := GetConfig()
 
+	var title string
+	switch config.APIKey {
+	case "":
+		title = "./" + videoTitle + "." + "opus"
+	default:
+		title = "/Music/" + videoTitle + "." + "opus"
+	}
 	stream, size, err := client.GetStream(video, format)
 	if err != nil {
 		return fmt.Errorf("error getting video stream: %v", err)
