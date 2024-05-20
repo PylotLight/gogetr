@@ -124,29 +124,28 @@ func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 	// HandleNewFile(ID, ndf) //Get available files to select  GET /torrents/info/{id} //Select the relevant files from the torrent POST /torrents/selectFiles/{id}
 	// We've been able to add the magnet, then we need to present a selection window to user to select files to download. or we send a download all along with the request?
 	// // Define the response data
-	responseData := struct {
-		// Message     string      `json:"message"`
-		Success     bool        `json:"success"`
-		TorrentInfo TorrentInfo `json:"TorrentInfo"`
-	}{}
+	// responseData := struct {
+	// 	// Message     string      `json:"message"`
+	// 	Success     bool        `json:"success"`
+	// 	TorrentInfo TorrentInfo `json:"TorrentInfo"`
+	// }{}
 
 	// Launch a goroutine to handle the long-running task
-	// go func() {
 	body := "magnet=" + link
 	resp, _ := RDAPI[MagnetCreated]("POST", "torrents/addMagnet", body)
 	ID := resp.ID
 	ndf.Magnet = link
-	files, _ := RDAPI[TorrentInfo]("GET", "torrents/info/"+ID, "")
-	responseData.TorrentInfo = files
-	responseData.Success = true
-	// }()
+	AutoHandleNewFile(ID, ndf)
+	// files, _ := RDAPI[TorrentInfo]("GET", "torrents/info/"+ID, "")
+	// responseData.TorrentInfo = files
+	// responseData.Success = true
 
 	// Set the response headers
-	w.Header().Set("Content-Type", "application/json")
+	// w.Header().Set("Content-Type", "application/json")
 
 	// Write the JSON response
-	sendClientMessage("Submitted download for " + responseData.TorrentInfo.Filename)
-	json.NewEncoder(w).Encode(responseData)
+	sendClientMessage("Submitted download for " + ID)
+	// json.NewEncoder(w).Encode(responseData)
 }
 
 func SettingsHandler(w http.ResponseWriter, r *http.Request) {
