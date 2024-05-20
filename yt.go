@@ -16,27 +16,29 @@ func GetMedia(link string) error {
 	client := youtube.Client{}
 	format := &youtube.Format{}
 	videoIDs := []string{}
-
 	// Check if link is a playlist, if its a playlist loop through all videos and append to videoIDs
-	playlist, err := client.GetPlaylist(link)
-	if err != nil {
-		// Return the error if it occurs
-		return fmt.Errorf("error getting playlist: %v", err)
-	}
+	playlist, _ := client.GetPlaylist(link)
+	// https://www.youtube.com/watch?v=vXYXHHYdwTo&list=PLVjTe37QSG1ecSZefjVDI6P-To5FWv2Nr
+	// println(playlist.Title, playlist.ID)
+	// if err != nil {
+	// 	// Return the error if it occurs
+	// 	log.Printf("error getting playlist: %v", err)
+	// }
 
-	if playlist != nil {
+	if playlist != nil && len(playlist.Videos) > 0 {
 		// Get the first video in the playlist
 		println("Playlist found, number of videos:", len(playlist.Videos))
 		for _, video := range playlist.Videos {
 			videoIDs = append(videoIDs, video.ID)
 		}
 	}
-	if playlist == nil {
+
+	if playlist == nil || len(playlist.Videos) == 0 {
 		// Extract the video ID from the link
 		videoID, err := youtube.ExtractVideoID(link)
 		if err != nil {
 			// Return the error if it occurs
-			return fmt.Errorf("error extracting video ID: %v", err)
+			log.Printf("error extracting video ID: %v", err)
 		}
 
 		videoIDs = append(videoIDs, videoID)
@@ -48,7 +50,8 @@ func GetMedia(link string) error {
 			video, err := client.GetVideo(videoID)
 			if err != nil {
 				// Return the error if it occurs
-				fmt.Errorf("error getting video: %v", err)
+				log.Printf("error getting video: %v", err)
+				return
 			}
 
 			// Find a suitable format for the video
@@ -64,7 +67,8 @@ func GetMedia(link string) error {
 			err = DownloadVideo(video, format)
 			if err != nil {
 				// Return the error if it occurs
-				fmt.Errorf("error downloading video: %v", err)
+				log.Printf("error downloading video: %v", err)
+				return
 			}
 
 		}
@@ -78,22 +82,20 @@ func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
 	client := youtube.Client{}
 	re := regexp.MustCompile(`[\\/:*?"<>|]`)
 	videoTitle := re.ReplaceAllString(video.Title, "-")
-	config := GetConfig()
-
-	var title string
-	switch config.APIKey {
-	case "":
-		title = "./" + videoTitle + "." + "opus"
+	var FileName string
+	switch GetConfig().APIKey {
+	case "You must set an API Key":
+		FileName = "Music/" + videoTitle + "." + "opus"
 	default:
-		title = "/Music/" + videoTitle + "." + "opus"
+		FileName = "/Music/" + videoTitle + "." + "opus"
 	}
 	stream, size, err := client.GetStream(video, format)
 	if err != nil {
 		return fmt.Errorf("error getting video stream: %v", err)
 	}
-	log.Printf("Downloading video: %s", title)
-	sendClientMessage("Downloading " + strconv.FormatInt(size, 10) + " bytes to path: " + title)
-	file, err := os.Create(title)
+	log.Printf("Downloading video: %s", FileName)
+	sendClientMessage("Downloading " + strconv.FormatInt(size, 10) + " bytes to path: " + FileName)
+	file, err := os.Create(FileName)
 	if err != nil {
 		return fmt.Errorf("error creating file: %v", err)
 	}
@@ -101,12 +103,13 @@ func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
 	// Create a buffer to read the response body into.
 	buf := make([]byte, 4096)
 	// Read the response body into the buffer, and write it to the file.
-	n, err := io.CopyBuffer(file, stream, buf)
+	written, err := io.CopyBuffer(file, stream, buf)
 	if err != nil {
 		return err
 	}
+	mb := float64(written) / 1024 / 1024
 	sendClientMessage("Finished downloading video: " + videoTitle)
-	log.Printf("Copied %d bytes\n", n)
+	log.Printf("Copied %.1fMB\n", mb)
 
 	return nil
 }
