@@ -103,7 +103,7 @@ func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 	link := r.FormValue("link")
 
 	go func() {
-		err := GetMedia(link)
+		err := GetMedia(link, w)
 		if err != nil {
 			w.Header().Set("Content-Type", "text/html")
 			// Your HTML content goes here
@@ -115,7 +115,9 @@ func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 		// Your HTML content goes here
 		fmt.Fprint(w, "<pre>Download was successfull</pre>")
 	}() // Run the download in the background
-
+	w.Header().Set("Content-Type", "text/html")
+	// Your HTML content goes here
+	fmt.Fprint(w, "<pre>Download was successfull</pre>")
 	// Set the response headers
 	// w.Header().Set("Content-Type", "application/json")
 	// json.NewEncoder(w).Encode(struct {

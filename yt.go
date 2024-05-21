@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"regexp"
 	"strconv"
@@ -11,7 +12,7 @@ import (
 	"github.com/kkdai/youtube/v2"
 )
 
-func GetMedia(link string) error {
+func GetMedia(link string, w http.ResponseWriter) error {
 	// Create a youtube client
 	client := youtube.Client{}
 	format := &youtube.Format{}
@@ -64,12 +65,18 @@ func GetMedia(link string) error {
 			}
 
 			// Download the video using the selected format
-			err = DownloadVideo(video, format)
+			stream, _, _, err := getStream(video, format)
 			if err != nil {
 				// Return the error if it occurs
-				log.Printf("error downloading video: %v", err)
+				log.Printf("error getting stream: %v", err)
 				return
 			}
+			// if "something == local" == "se" {
+			// downloadLocal(stream, size, FileName)
+			// }
+			// if "something == external" == "" {
+			downloadPublic(stream, w)
+			// }
 
 		}
 	}()
@@ -78,7 +85,7 @@ func GetMedia(link string) error {
 
 }
 
-func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
+func getStream(video *youtube.Video, format *youtube.Format) (io.ReadCloser, int64, string, error) {
 	client := youtube.Client{}
 	re := regexp.MustCompile(`[\\/:*?"<>|]`)
 	videoTitle := re.ReplaceAllString(video.Title, "-")
@@ -91,8 +98,13 @@ func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
 	}
 	stream, size, err := client.GetStream(video, format)
 	if err != nil {
-		return fmt.Errorf("error getting video stream: %v", err)
+		return nil, 0, "", fmt.Errorf("error getting video stream: %v", err)
 	}
+
+	return stream, size, FileName, nil
+}
+
+func downloadLocal(stream io.ReadCloser, size int64, FileName string) error {
 	log.Printf("Downloading video: %s", FileName)
 	sendClientMessage("Downloading " + strconv.FormatInt(size, 10) + " bytes to path: " + FileName)
 	file, err := os.Create(FileName)
@@ -108,8 +120,21 @@ func DownloadVideo(video *youtube.Video, format *youtube.Format) error {
 		return err
 	}
 	mb := float64(written) / 1024 / 1024
-	sendClientMessage("Finished downloading video: " + videoTitle)
+	sendClientMessage("Finished downloading video: " + FileName)
 	log.Printf("Copied %.1fMB\n", mb)
 
 	return nil
+}
+
+func downloadPublic(stream io.ReadCloser, w http.ResponseWriter) {
+
+	// Set the headers for the download
+	w.Header().Set("Content-Disposition", "attachment; filename=\"downloaded_file\"")
+	w.Header().Set("Content-Type", "application/octet-stream")
+
+	// Copy the stream to the HTTP response writer
+	if _, err := io.Copy(w, stream); err != nil {
+		http.Error(w, "Failed to write data", http.StatusInternalServerError)
+		return
+	}
 }
