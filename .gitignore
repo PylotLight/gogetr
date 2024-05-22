@@ -25,3 +25,6 @@ config/*
 _debug_bin*
 go.sum
 __debug_bin*
+import/
+export/
+Music/
