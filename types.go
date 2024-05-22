@@ -96,14 +96,14 @@ func (t TorrentMulti) InfoHash(encode []byte) []byte {
 	return bs
 }
 
-func (p Page) SaveConfig(c Configuration) error {
+func (p Page) SaveConfig(c *Configuration) error {
 	currentconfig := GetConfig()
 	currentconfig.APIKey = c.APIKey
 	currentconfig.Export = c.Export
 	currentconfig.Import = c.Import
 	currentconfig.AppVersion = c.AppVersion
 	currentconfig.MediaTypes = c.MediaTypes
-	SetConfig(currentconfig)
+	SetConfig(*currentconfig)
 	return nil
 }
 

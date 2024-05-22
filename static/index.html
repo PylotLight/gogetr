@@ -94,7 +94,7 @@
           <div class="input-group mb-3">
             <span class="input-group-text">Youtube Download</span>
             <input name="link" id="ytlink" type="text" class="form-control" placeholder="https://www.youtube.com/watch?v=....">
-            <button type="submit" class="btn btn-primary" id="submit-download" hx-include="[id='ytlink']" hx-post="api/ytdownload" data-hx-target="#download-status">Submit</button>
+            <button type="submit" class="btn btn-primary" id="submit-download" hx-include="[id='ytlink']" hx-get="api/ytdownload" data-hx-target="#download-status" download>Submit</button>
           </div>
           <div id="download-status" class="alert alert-info" role="alert"></div>
         </form>

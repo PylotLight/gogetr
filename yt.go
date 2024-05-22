@@ -12,7 +12,7 @@ import (
 	"github.com/kkdai/youtube/v2"
 )
 
-func GetMedia(link string, w http.ResponseWriter) error {
+func GetMedia(link string, w http.ResponseWriter, r *http.Request) error {
 	// Create a youtube client
 	client := youtube.Client{}
 	format := &youtube.Format{}
@@ -45,53 +45,56 @@ func GetMedia(link string, w http.ResponseWriter) error {
 		videoIDs = append(videoIDs, videoID)
 	}
 
-	go func() {
-		for _, videoID := range videoIDs {
-			// Get the video from youtube
-			video, err := client.GetVideo(videoID)
-			if err != nil {
-				// Return the error if it occurs
-				log.Printf("error getting video: %v", err)
-				return
-			}
+	for _, videoID := range videoIDs {
+		// Get the video from youtube
+		video, err := client.GetVideo(videoID)
+		if err != nil {
+			// Return the error if it occurs
+			log.Printf("error getting video: %v", err)
+			continue
+		}
 
-			// Find a suitable format for the video
+		preferences := []int{338, 251, 250, 249, 140, 327}
+
+		// Loop through the preferences and find the first matching format
+		for _, pref := range preferences {
 			for i := range video.Formats {
-				switch video.Formats[i].ItagNo {
-				case 251, 250:
+				if video.Formats[i].ItagNo == pref {
 					format = &video.Formats[i]
-					// break
+					break
 				}
 			}
-
-			// Download the video using the selected format
-			stream, _, _, err := getStream(video, format)
-			if err != nil {
-				// Return the error if it occurs
-				log.Printf("error getting stream: %v", err)
-				return
+			if format.ItagNo != 0 {
+				break
 			}
-			// if "something == local" == "se" {
-			// downloadLocal(stream, size, FileName)
-			// }
-			// if "something == external" == "" {
-			downloadPublic(stream, w)
-			// }
-
 		}
-	}()
 
+		// Download the video using the selected format
+		stream, size, FileName, err := getDownloadStream(video, format)
+		if err != nil {
+			// Return the error if it occurs
+			log.Printf("error getting stream: %v", err)
+			continue
+		}
+		// if local {
+		downloadLocal(stream, size, FileName)
+		// }
+		// if !local {
+		// downloadPublic(stream, w, r)
+		// }
+		fmt.Fprint(w, "<pre>Download completed successfully:\n", FileName, "</pre>")
+
+	}
 	return nil
-
 }
 
-func getStream(video *youtube.Video, format *youtube.Format) (io.ReadCloser, int64, string, error) {
+func getDownloadStream(video *youtube.Video, format *youtube.Format) (io.ReadCloser, int64, string, error) {
 	client := youtube.Client{}
 	re := regexp.MustCompile(`[\\/:*?"<>|]`)
 	videoTitle := re.ReplaceAllString(video.Title, "-")
 	var FileName string
-	switch GetConfig().APIKey {
-	case "You must set an API Key":
+	switch GetConfig().AppVersion {
+	case "":
 		FileName = "Music/" + videoTitle + "." + "opus"
 	default:
 		FileName = "/Music/" + videoTitle + "." + "opus"
@@ -126,15 +129,29 @@ func downloadLocal(stream io.ReadCloser, size int64, FileName string) error {
 	return nil
 }
 
-func downloadPublic(stream io.ReadCloser, w http.ResponseWriter) {
+func downloadPublic(stream io.ReadCloser, w http.ResponseWriter, r *http.Request) {
 
-	// Set the headers for the download
-	w.Header().Set("Content-Disposition", "attachment; filename=\"downloaded_file\"")
-	w.Header().Set("Content-Type", "application/octet-stream")
+	defer stream.Close()
 
-	// Copy the stream to the HTTP response writer
-	if _, err := io.Copy(w, stream); err != nil {
-		http.Error(w, "Failed to write data", http.StatusInternalServerError)
+	// Create a temporary file
+	tempFile, err := os.CreateTemp("", "downloaded_file_*.opus")
+	if err != nil {
+		http.Error(w, "Failed to create temporary file", http.StatusInternalServerError)
 		return
 	}
+	defer os.Remove(tempFile.Name()) // Clean up the temporary file
+
+	// Write the stream content to the temporary file
+	_, err = io.Copy(tempFile, stream)
+	if err != nil {
+		http.Error(w, "Failed to write data to temporary file", http.StatusInternalServerError)
+		return
+	}
+
+	// Set the headers for the download
+	w.Header().Set("Content-Disposition", "attachment; filename=\"downloaded_file.opus\"")
+	w.Header().Set("Content-Type", "audio/opus")
+
+	// Serve the temporary file
+	http.ServeFile(w, r, tempFile.Name())
 }

@@ -54,29 +54,31 @@ func init() {
 
 	config := GetConfig()
 	config.AppVersion = AppVersion
-	SetConfig(config)
+	SetConfig(*config)
 }
 
 func main() {
 	go watcher()
 	// Build
 	staticSubFS, _ := fs.Sub(staticFS, "static")
-	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticSubFS))))
+	mux := http.NewServeMux()
+
+	mux.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.FS(staticSubFS))))
 	// rootPath = "/"
 	// Debug
 	// http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	// http.Handle("/static/", http.StripPrefix(strings.TrimRight("static", "/"), http.FileServer(http.Dir("/static/"))))
-	http.HandleFunc("/", handler)
-	http.HandleFunc("/api/handshake", SSEhandler)
-	http.HandleFunc("/api/settings", SettingsHandler)
-	http.HandleFunc("/api/tasks", TasksHandler)
-	http.HandleFunc("/api/getfolders", GetFoldersHandler)
-	http.HandleFunc("/api/ytdownload", DownloadYTHandler)
-	http.HandleFunc("/api/rddownload", DownloadRDHandler)
+	mux.HandleFunc("/", handler)
+	mux.HandleFunc("/api/handshake", SSEhandler)
+	mux.HandleFunc("/api/settings", SettingsHandler)
+	mux.HandleFunc("/api/tasks", TasksHandler)
+	mux.HandleFunc("/api/getfolders", GetFoldersHandler)
+	mux.HandleFunc("/api/ytdownload", DownloadYTHandler)
+	mux.HandleFunc("/api/rddownload", DownloadRDHandler)
 	// http.HandleFunc("/", handleFolderBrowser)
 	// http.HandleFunc("/browse", handleBrowse)
 	go eventLoop()
 	fmt.Println("Listening on http://localhost:9000")
-	log.Fatal("HTTP server error: ", http.ListenAndServe("0.0.0.0:9000", nil))
+	log.Fatal("HTTP server error: ", http.ListenAndServe("0.0.0.0:9000", mux))
 
 }

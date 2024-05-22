@@ -21,7 +21,7 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		Title:  title,
 		Body:   []byte(""),
 		Files:  files,
-		Config: GetConfig(),
+		Config: *GetConfig(),
 	}
 	t, err := template.ParseFS(staticFS, "static/*.html")
 
@@ -100,53 +100,36 @@ func DownloadYTHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Failed to parse form data", http.StatusBadRequest)
 		return
 	}
-	link := r.FormValue("link")
-
-	go func() {
-		err := GetMedia(link, w)
-		if err != nil {
-			w.Header().Set("Content-Type", "text/html")
-			// Your HTML content goes here
-			fmt.Fprint(w, "<pre>Download failed for some reason</pre>")
-			return
-		}
-
+	// link := r.FormValue("link")
+	// link := r.PathValue("link")
+	link := r.URL.Query().Get("link")
+	if link == "" {
+		http.Error(w, "Missing 'link' parameter", http.StatusBadRequest)
+		return
+	}
+	println("Got link:", link)
+	if err := GetMedia(link, w, r); err != nil {
+		// In case of error during GetMedia, respond with a failure message.
+		// Set headers for an HTML response before initiating the download
 		w.Header().Set("Content-Type", "text/html")
-		// Your HTML content goes here
-		fmt.Fprint(w, "<pre>Download was successfull</pre>")
-	}() // Run the download in the background
-	w.Header().Set("Content-Type", "text/html")
-	// Your HTML content goes here
-	fmt.Fprint(w, "<pre>Download was successfull</pre>")
-	// Set the response headers
-	// w.Header().Set("Content-Type", "application/json")
-	// json.NewEncoder(w).Encode(struct {
-	// 	Message string `json:"message"`
-	// 	Success bool   `json:"success"`
-	// }{
-	// 	Message: "Audio download started successfully",
-	// 	Success: true,
-	// })
+		fmt.Fprint(w, "<pre>Download failed for some reason: ", err, "</pre>")
+		return
+	}
 }
 
 func DownloadRDHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the incoming data
 	var ndf NewDownloadFile
 	link := r.FormValue("rdlink")
-	// Now we have a list of files, we return this to the user to select, then capture response again.
-	// ManualFileSelection(ID)
-	// HandleNewFile(ID, ndf) //Get available files to select  GET /torrents/info/{id} //Select the relevant files from the torrent POST /torrents/selectFiles/{id}
-	// We've been able to add the magnet, then we need to present a selection window to user to select files to download. or we send a download all along with the request?
-	// // Define the response data
-	// responseData := struct {
-	// 	// Message     string      `json:"message"`
-	// 	Success     bool        `json:"success"`
-	// 	TorrentInfo TorrentInfo `json:"TorrentInfo"`
-	// }{}
 
 	// Launch a goroutine to handle the long-running task
 	body := "magnet=" + link
-	resp, _ := RDAPI[MagnetCreated]("POST", "torrents/addMagnet", body)
+	resp, err := RDAPI[MagnetCreated]("POST", "torrents/addMagnet", body)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		sendClientMessage(err.Error())
+		return
+	}
 	ID := resp.ID
 	ndf.Magnet = link
 	ndf.local = false
@@ -171,7 +154,7 @@ func SettingsHandler(w http.ResponseWriter, r *http.Request) {
 	bytes, _ := io.ReadAll(r.Body)
 	json.Unmarshal(bytes, &configuration)
 	println(string(bytes))
-	Page.SaveConfig(Page{}, configuration)
+	Page.SaveConfig(Page{}, &configuration)
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
@@ -212,46 +195,3 @@ func GetFoldersHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 	}
 }
-
-// func handleFolderBrowser(w http.ResponseWriter, r *http.Request) {
-// 	// Parse the template file
-// 	tmpl := template.Must(template.ParseFiles("index.html"))
-
-// 	// Get the current directory path from the URL query parameters
-// 	currentPath := r.URL.Query().Get("path")
-// 	if currentPath == "" {
-// 		currentPath = rootPath
-// 	}
-
-// 	// Get the list of directories in the current directory
-// 	dirs, err := getDirectories(currentPath)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-
-// 	// Create the page data
-// 	data := PageData{
-// 		CurrentPath: currentPath,
-// 		Dirs:        dirs,
-// 	}
-
-// 	// Execute the template with the page data
-// 	err = tmpl.Execute(w, data)
-// 	if err != nil {
-// 		http.Error(w, err.Error(), http.StatusInternalServerError)
-// 		return
-// 	}
-// }
-
-// func handleBrowse(w http.ResponseWriter, r *http.Request) {
-// 	// Get the selected directory path from the form data
-// 	selectedPath := r.FormValue("selectedPath")
-// 	log.Println("Selected Path:", selectedPath)
-
-// 	// Do something with the selected directory path, such as processing files within it
-// 	// ...
-
-// 	// Redirect back to the folder browser
-// 	http.Redirect(w, r, "/", http.StatusFound)
-// }

@@ -20,23 +20,6 @@ import (
 
 var ConfigFile = "config/config.yaml"
 
-// func scheduler() {
-// 	for {
-// 		config := GetConfig()
-// 		// CurrentTime := time.Now().In(config.NextRunTime.Location())
-// 		// if config.NextRunTime.Before(CurrentTime) {
-// 		ProcessNewFiles()
-// 		// }
-// 		config.LastRunTime = time.Now().In(config.NextRunTime.Location())
-// 		config.NextRunTime = config.LastRunTime.Add(time.Minute + 2)
-// 		SetConfig(config)
-// 		nextrunTime := "Next scan time: " + config.NextRunTime.Format(time.ANSIC)
-// 		println(nextrunTime)
-// 		sendClientMessage("Next scan at: " + config.NextRunTime.Local().Format(time.Kitchen))
-// 		time.Sleep(time.Minute * 1)
-// 	}
-// }
-
 func watcher() {
 	// Create new watcher.
 	watcher, err := fsnotify.NewWatcher()
@@ -81,20 +64,16 @@ func watcher() {
 }
 
 func SetConfig(Configuration Configuration) {
-	//get current config
-	//get update options for setting var
-	//combine?
-	//set
-
-	//config := GetConfig()
-
-	data, _ := yaml.Marshal(Configuration)
+	data, err := yaml.Marshal(Configuration)
+	if err != nil {
+		log.Println("Failed to marshal yaml")
+	}
 	os.WriteFile(ConfigFile, data, 0644)
 }
 
-func GetConfig() Configuration {
+func GetConfig() *Configuration {
 
-	configuration := Configuration{}
+	configuration := &Configuration{}
 	//check if file exists and create if it doesnt, otherwise proceeed to read the file and return the config data
 	if _, err := os.Stat(ConfigFile); errors.Is(err, os.ErrNotExist) {
 		os.MkdirAll("config/", os.ModePerm)
@@ -109,21 +88,22 @@ func GetConfig() Configuration {
 		}
 		configuration.NextRunTime = time.Now().In(loc).Add(time.Hour + 1)
 		configuration.LastRunTime = time.Now().In(loc)
-		if os.Getenv("APIKey") == "" {
-			configuration.APIKey = "You must set an API Key"
-		}
 		_, err := os.Stat("/Music")
-
 		if os.IsNotExist(err) {
 			// Output an error message indicating that the path does not exist
 			log.Println("Error: the /Music path does not exist")
 		}
 
 		configuration.MediaTypes = append(configuration.MediaTypes, "mp4", "mkv")
-		data, _ := yaml.Marshal(configuration)
+		data, err := yaml.Marshal(configuration)
+		if err != nil {
+			log.Println("Failed to marshal yaml")
+			return nil
+		}
 		fileerr := os.WriteFile(ConfigFile, data, 0644)
 		if fileerr != nil {
-			println("WriteFile:", err.Error())
+			log.Println("WriteFile:", err.Error())
+			return nil
 		}
 	}
 
@@ -158,6 +138,7 @@ func GetFiles() []NewDownloadFile {
 		NewFile.Description = fileinfo.Name()
 		NewFile.LastModified = fileinfo.ModTime()
 		NewFile.FileCreated = fileinfo.ModTime()
+		NewFile.local = true
 		filesDetails = append(filesDetails, NewFile)
 	}
 	return filesDetails
@@ -190,32 +171,6 @@ func GetFolders(path string) []string {
 	}
 	return dirs
 }
-
-// func getDirectories(dirPath string) ([]string, error) {
-// 	var dirs []string
-
-// 	// Open the directory
-// 	dir, err := os.Open(dirPath)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer dir.Close()
-
-// 	// Read the directory entries
-// 	fileInfos, err := dir.Readdir(0)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	// Filter and collect the directories
-// 	for _, fileInfo := range fileInfos {
-// 		if fileInfo.IsDir() {
-// 			dirs = append(dirs, fileInfo.Name())
-// 		}
-// 	}
-
-// 	return dirs, nil
-// }
 
 func GetMagnetLink(NewFile NewDownloadFile) NewDownloadFile {
 
@@ -252,22 +207,16 @@ func GetMagnetLink(NewFile NewDownloadFile) NewDownloadFile {
 	return NewFile
 }
 
-// convert files to submit
 func GetDownloadItems() []NewDownloadFile {
-	//Get file data, filename, path, dates
-	//send to get link where we add the magnetlink for the torrent
 	files := GetFiles()
 	var fileitems []NewDownloadFile
-	// print("Grabbing maglink for files")
-	// config := GetConfig()
+
 	for _, file := range files {
 		fileitems = append(fileitems, GetMagnetLink(file))
 	}
-	// print("Got maglink for files")
 	return fileitems
 }
 
-// Send task to RD(scheduler?) return status of submission and files info
 func RDAPI[T any](Method string, Endpoint string, Body string) (T, error) {
 	ContentType := "application/x-www-form-urlencoded"
 
@@ -277,55 +226,73 @@ func RDAPI[T any](Method string, Endpoint string, Body string) (T, error) {
 
 	req, reqerror := http.NewRequest(Method, "https://api.real-debrid.com/rest/1.0/"+Endpoint, reqBody)
 	if reqerror != nil {
-		println("reqerror:", reqerror.Error())
+		return result, fmt.Errorf("request error: %w", reqerror)
 	}
-	// println("252")
+
 	client := &http.Client{}
+	APIKey := GetConfig().APIKey
+	if APIKey == "" {
+		return result, errors.New("API Key is not set")
+	}
+
 	req.Header.Add("Authorization", "Bearer "+GetConfig().APIKey)
 	req.Header.Add("Content-Type", ContentType)
+
 	resp, err := client.Do(req)
-	// respjson, _ := json.Marshal(resp)
-	// print(string(respjson))
 	if err != nil {
-		fmt.Println("Error in request: ", err.Error())
-		return result, err
+		return result, fmt.Errorf("error in request: %w", err)
 	}
-	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent {
-		println("Status: ", resp.StatusCode)
-		return result, err
-	}
-	// println("263")
 	defer resp.Body.Close()
-	// println("264")
+
+	if resp.StatusCode != http.StatusOK && resp.StatusCode != http.StatusAccepted && resp.StatusCode != http.StatusCreated && resp.StatusCode != http.StatusNoContent {
+		return result, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	if resp.StatusCode == http.StatusNoContent {
+		return result, nil
+	}
+
 	data, reserror := io.ReadAll(resp.Body)
 	if reserror != nil {
-		println("reserror:", reserror.Error())
+		return result, fmt.Errorf("response read error: %w", reserror)
 	}
-	// println("269")
-	jsonerr := json.Unmarshal(data, &result)
-	// println("271")
-	if jsonerr != nil {
-		println(jsonerr.Error())
-	}
-	// fmt.Println("275")
-	//try return generic interface that is typed outside func and can return any type
 
-	return result, err
+	jsonerr := json.Unmarshal(data, &result)
+	if jsonerr != nil {
+		return result, fmt.Errorf("unable to unmarshal JSON: %w", jsonerr)
+	}
+
+	return result, nil
 }
 
-// select the files
-func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) (UnrestrictedLink, error) {
+func ProcessNewFiles() {
+	for _, v := range GetDownloadItems() {
+		body := "magnet=" + v.Magnet
+		resp, err := RDAPI[MagnetCreated]("POST", "torrents/addMagnet", body)
+		if err != nil {
+			log.Println("Error adding magnet: " + err.Error())
+			return
+		}
+		_, err = AutoHandleNewFile(resp.ID, v)
+		if err != nil {
+			fmt.Printf("Unable to process file %s, due to error %s", v.Filename, err)
+		}
+	}
+}
+
+func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) (*UnrestrictedLink, error) {
 	var fileselection []string
 	var Downloaded bool
 	config := GetConfig()
 
 	for !Downloaded {
-		files, _ := RDAPI[TorrentInfo]("GET", "torrents/info/"+TaskID, "")
+		files, err := RDAPI[TorrentInfo]("GET", "torrents/info/"+TaskID, "")
+		if err != nil {
+			return nil, err
+		}
 		switch files.Status {
 		case "waiting_files_selection":
 			{
-				// if getconfig().GrabALl == true, set files=all
-
 				for _, v := range files.Files {
 					// skip sample files
 					if strings.Contains(strings.ToLower(v.Path), "sample") {
@@ -340,95 +307,67 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) (UnrestrictedLink, er
 					}
 
 				}
-				RDAPI[any]("POST", "torrents/selectFiles/"+TaskID, "files="+strings.Join(fileselection, ","))
-				// RDAPI[any]("POST", "torrents/selectFiles/"+TaskID, "files=all")
+				_, err := RDAPI[any]("POST", "torrents/selectFiles/"+TaskID, "files="+strings.Join(fileselection, ","))
+				if err != nil {
+					return nil, err
+				}
 			}
-		// case "magnet_conversion":
-		// 	{
-		// 	}
 		case "Invalid Magnet":
 			{
-				// os.Remove(files.Filename)
-				// delete the file cause it doesn't work.
-				// DeleteFile(files.Filename)
-				fmt.Println("Skipping dud file " + files.ID)
+				fmt.Println("Skipping dud file - invalid magnet" + files.ID)
 				continue
 			}
 		case "downloaded":
 			{
-
 				Downloaded = true
 				for _, i := range files.Links {
-					unrestrictedLink, _ := RDAPI[UnrestrictedLink]("POST", "unrestrict/link/"+TaskID, "link="+i)
+					unrestrictedLink, err := RDAPI[UnrestrictedLink]("POST", "unrestrict/link/"+TaskID, "link="+i)
+					if err != nil {
+						return nil, err
+					}
 					if !ndf.local {
 						sendClientMessage("Download ready for: " + unrestrictedLink.Filename)
-						return unrestrictedLink, nil
+						return &unrestrictedLink, nil
 					}
 					resp, err := http.Get(unrestrictedLink.Download)
 					if err != nil {
-						log.Fatal(err)
+						return nil, fmt.Errorf("unable to unmarshal JSON: %w", err)
 					}
 					defer resp.Body.Close()
 					FullName := config.Export + unrestrictedLink.Filename
 					println("Downloading:", FullName)
 					fileHandle, err := os.OpenFile(FullName, os.O_CREATE|os.O_APPEND|os.O_RDWR, 0644)
 					if err != nil {
-						panic(err)
+						return nil, fmt.Errorf("unable to open file handle: %w", err)
 					}
 					defer fileHandle.Close()
 					buf := make([]byte, 16384)
 					n, err := io.CopyBuffer(fileHandle, resp.Body, buf)
 					if err != nil {
-						return UnrestrictedLink{}, err
+						return nil, fmt.Errorf("error copying file: %w", err)
 					}
 					sendClientMessage("Downloaded " + unrestrictedLink.Filename)
 					fmt.Printf("Downloaded a file %s with size %d and bytes copied %d", unrestrictedLink.Filename, unrestrictedLink.Filesize, n)
-
 				}
 				DeleteFile(ndf.Filename)
 			}
 		case "":
 			{
-				fmt.Println("Skipping dud file " + files.ID)
 				DeleteFile(ndf.Filename)
-				return UnrestrictedLink{}, fmt.Errorf("Dud file")
+				return nil, fmt.Errorf("skipping dud file %s", files.ID)
 			}
 		default:
 			{
-				// j, _ := json.Marshal(files)
 				println("Waiting for 30 seconds.. Torrent Progress:", files.Progress)
 				sendClientMessage("Waiting for 30 seconds.. Torrent Progress: " + fmt.Sprint(files.Progress))
-				// println(string(j))
 				time.Sleep(30 * time.Second)
 			}
 		}
 	}
 
-	return UnrestrictedLink{}, nil
+	return &UnrestrictedLink{}, nil
 }
-
-// func ManualFileSelection(link string) {
-// 	// We need to run a get to collect available files and return that in array to be presented.
-// }
-
 func DeleteFile(path string) {
 	println("Deleting..", path)
 	os.Remove(path)
 }
-
-func ProcessNewFiles() {
-	for _, v := range GetDownloadItems() {
-		body := "magnet=" + v.Magnet
-		resp, _ := RDAPI[MagnetCreated]("POST", "torrents/addMagnet", body)
-		ID := resp.ID
-		AutoHandleNewFile(ID, v) //Get available files to select  GET /torrents/info/{id} //Select the relevant files from the torrent POST /torrents/selectFiles/{id}
-
-		//check if ready GET /torrents/info/{id}
-		//if ready get dl links POST /unrestrict/link
-		//if not ready, loop till ready GET /torrents/info/{id}
-		//dl GET
-	}
-}
-
-// After download, delete torrent files and log data
-func CleanDownloads() {}
