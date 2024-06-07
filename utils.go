@@ -230,12 +230,13 @@ func RDAPI[T any](Method string, Endpoint string, Body string) (T, error) {
 	}
 
 	client := &http.Client{}
+
 	APIKey := GetConfig().APIKey
 	if APIKey == "" {
 		return result, errors.New("API Key is not set")
 	}
 
-	req.Header.Add("Authorization", "Bearer "+GetConfig().APIKey)
+	req.Header.Add("Authorization", "Bearer "+APIKey)
 	req.Header.Add("Content-Type", ContentType)
 
 	resp, err := client.Do(req)
