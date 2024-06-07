@@ -348,7 +348,7 @@ func AutoHandleNewFile(TaskID string, ndf NewDownloadFile) (*UnrestrictedLink, e
 						return nil, fmt.Errorf("error copying file: %w", err)
 					}
 					sendClientMessage("Downloaded " + unrestrictedLink.Filename)
-					fmt.Printf("Downloaded a file %s with size %d and bytes copied %d", unrestrictedLink.Filename, unrestrictedLink.Filesize, n)
+					fmt.Printf("Downloaded a file %s with size %d and bytes copied %d\n", unrestrictedLink.Filename, unrestrictedLink.Filesize, n)
 				}
 				DeleteFile(ndf.Filename)
 			}
