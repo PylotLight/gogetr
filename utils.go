@@ -238,7 +238,7 @@ func RDAPI[T any](Method string, Endpoint string, Body string) (T, error) {
 
 	req.Header.Add("Authorization", "Bearer "+APIKey)
 	req.Header.Add("Content-Type", ContentType)
-	println(req.Header["Authorization"])
+	println(req.Header.Get("Authorization"))
 	resp, err := client.Do(req)
 	if err != nil {
 		return result, fmt.Errorf("error in request: %w", err)
