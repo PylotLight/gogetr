@@ -33,6 +33,6 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           push: true
-          tags: light37/gogetr:latest, light37/gogetr:$(date +%Y%m%d)
-          cache-from: type=local,src=/tmp/.buildx-cache
-          cache-to: type=local,dest=/tmp/.buildx-cache
+          tags: |
+            light37/gogetr:latest
+            light37/gogetr:${{ github.run_id }}
