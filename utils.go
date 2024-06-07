@@ -100,9 +100,9 @@ func GetConfig() *Configuration {
 			log.Println("Failed to marshal yaml")
 			return nil
 		}
-		fileerr := os.WriteFile(ConfigFile, data, 0644)
-		if fileerr != nil {
-			log.Println("WriteFile:", err.Error())
+		err = os.WriteFile(ConfigFile, data, 0644)
+		if err != nil {
+			log.Printf("WriteFile:%s", err.Error())
 			return nil
 		}
 	}
